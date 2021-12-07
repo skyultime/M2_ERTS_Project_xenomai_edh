@@ -1,0 +1,17 @@
+Main files to check for modifications (type cmd: "gitk &" in terminal)
+
+kernel/cobalt/sched-dyna.c
+kernel/cobalt/sched.c
+
+kernel/cobalt/posix/thread.c
+kernel/cobalt/thread.c
+
+lib/alchemy/task.c
+
+include/cobalt/kernel/sched-dyna.h
+include/cobalt/kernel/sched.h
+
+include/cobalt/kernel/thread.h
+
+include/alchemy/task.h
+
