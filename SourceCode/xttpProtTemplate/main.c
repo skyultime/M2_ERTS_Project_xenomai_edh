@@ -51,11 +51,9 @@
  *   =>  write traffic to NRT domain via sendto()       |
  *   =>  read traffic from NRT domain via recvfrom() <--|--+
  *                                                      |  |
- * regular_thread---------------------------------------+  |
- *   =>  open /dev/rtp0                                 |  ^
- *   =>  read traffic from RT domain via read()         |  |
- *   =>  echo traffic back to RT domain via write()     +--+
  */
+
+#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -65,15 +63,13 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <rtdm/ipc.h>
+#include <rtdk.h>
+#include <rtdm/rtipc.h>
 
-pthread_t rt, nrt;
+pthread_t rt;
 #define XDDP_PORT 0     /* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
-static const char *msg[] = {
-        "Temp=10",
-        "Voltage=5",
-        "Percent=50"
-};
+#define BATT_READ_MSG_LENGTH 22 
+
 static void fail(const char *reason)
 {
         perror(reason);
@@ -82,7 +78,7 @@ static void fail(const char *reason)
 static void *realtime_thread(void *arg)
 {
         struct sockaddr_ipc saddr;
-        int ret, s, n = 0, len;
+        int ret, s = 0, len;
         struct timespec ts;
         size_t poolsz;
         char buf[128];
@@ -116,73 +112,61 @@ static void *realtime_thread(void *arg)
         saddr.sipc_family = AF_RTIPC;
         saddr.sipc_port = XDDP_PORT;
         ret = bind(s, (struct sockaddr *)&saddr, sizeof(saddr));
-        if (ret)
+        if (ret){
                 fail("bind");
+        }else{
+                printf("\nBind ok on port %d\n",XDDP_PORT);
+        }
+        
         for (;;) {
-                len = strlen(msg[n]);
-                /*
-                 * Send a datagram to the NRT endpoint via the proxy.
-                 * We may pass a NULL destination address, since a
-                 * bound socket is assigned a default destination
-                 * address matching the binding address (unless
-                 * connect(2) was issued before bind(2), in which case
-                 * the former would prevail).
-                 */
-                ret = sendto(s, msg[n], len, 0, NULL, 0);
-                if (ret != len)
-                        fail("sendto");
-                printf("%s: sent %d bytes, \"%.*s\"\n",
-                       __FUNCTION__, ret, ret, msg[n]);
-                /* Read back packets echoed by the regular thread */
-                ret = recvfrom(s, buf, sizeof(buf), 0, NULL, 0);
+               
+                //Warning : blocking call here...
+                ret = recvfrom(s, buf, BATT_READ_MSG_LENGTH, 0, NULL, 0);
                 if (ret <= 0)
                         fail("recvfrom");
-                printf("   => \"%.*s\" echoed by peer\n", ret, buf);
-                n = (n + 1) % (sizeof(msg) / sizeof(msg[0]));
-                /*
+                printf("Rx Message from nRT: %s\n", buf);
+                
+		/*
                  * We run in full real-time mode (i.e. primary mode),
                  * so we have to let the system breathe between two
                  * iterations.
                  */
                 ts.tv_sec = 0;
-                ts.tv_nsec = 500000000; /* 500 ms */
+                ts.tv_nsec = 2000000000; /* 2500 ms */
                 clock_nanosleep(CLOCK_REALTIME, 0, &ts, NULL);
         }
         return NULL;
 }
-static void *regular_thread(void *arg)
+
+
+static void cleanup_upon_sig(int sig)
 {
-        char buf[128], *devname;
-        int fd, ret;
-        if (asprintf(&devname, "/dev/rtp%d", XDDP_PORT) < 0)
-                fail("asprintf");
-        fd = open(devname, O_RDWR);
-        free(devname);
-        if (fd < 0)
-                fail("open");
-        for (;;) {
-                /* Get the next message from realtime_thread. */
-                ret = read(fd, buf, sizeof(buf));
-                if (ret <= 0)
-                        fail("read");
-                /* Echo the message back to realtime_thread. */
-                ret = write(fd, buf, ret);
-                if (ret <= 0)
-                        fail("write");
-        }
-        return NULL;
+        pthread_cancel(rt);
+        signal(sig, SIG_DFL);
+        pthread_join(rt, NULL);
 }
+
 int main(int argc, char **argv)
 {
         struct sched_param rtparam = { .sched_priority = 42 };
         pthread_attr_t rtattr, regattr;
-        sigset_t set;
-        int sig;
-        sigemptyset(&set);
-        sigaddset(&set, SIGINT);
-        sigaddset(&set, SIGTERM);
-        sigaddset(&set, SIGHUP);
-        pthread_sigmask(SIG_BLOCK, &set, NULL);
+        sigset_t mask, oldmask;
+        mlockall(MCL_CURRENT | MCL_FUTURE);
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGINT);
+        signal(SIGINT, cleanup_upon_sig);
+        sigaddset(&mask, SIGTERM);
+        signal(SIGTERM, cleanup_upon_sig);
+        sigaddset(&mask, SIGHUP);
+        signal(SIGHUP, cleanup_upon_sig);
+        pthread_sigmask(SIG_BLOCK, &mask, &oldmask);
+        /*
+         * This is a real-time compatible printf() package from
+         * Xenomai's RT Development Kit (RTDK), that does NOT cause
+         * any transition to secondary (i.e. non real-time) mode when
+         * writing output.
+         */
+        rt_print_auto_init(1);
         pthread_attr_init(&rtattr);
         pthread_attr_setdetachstate(&rtattr, PTHREAD_CREATE_JOINABLE);
         pthread_attr_setinheritsched(&rtattr, PTHREAD_EXPLICIT_SCHED);
@@ -191,17 +175,6 @@ int main(int argc, char **argv)
         errno = pthread_create(&rt, &rtattr, &realtime_thread, NULL);
         if (errno)
                 fail("pthread_create");
-        pthread_attr_init(&regattr);
-        pthread_attr_setdetachstate(&regattr, PTHREAD_CREATE_JOINABLE);
-        pthread_attr_setinheritsched(&regattr, PTHREAD_EXPLICIT_SCHED);
-        pthread_attr_setschedpolicy(&regattr, SCHED_OTHER);
-        errno = pthread_create(&nrt, &regattr, &regular_thread, NULL);
-        if (errno)
-                fail("pthread_create");
-        sigwait(&set, &sig);
-        pthread_cancel(rt);
-        pthread_cancel(nrt);
-        pthread_join(rt, NULL);
-        pthread_join(nrt, NULL);
-        return 0;
+        sigsuspend(&oldmask);
+    return 0;
 }
