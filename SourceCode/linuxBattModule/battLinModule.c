@@ -32,6 +32,7 @@ static void wq_exit(void);
 
 static struct timer_list timerBattery;/*Kernel timer*/ 
 static struct work_data * data;
+struct file *fd;
 
 static int initialised = 0;
  
@@ -46,7 +47,6 @@ static void batteryTimerHandler(struct timer_list *t){
 
     if(schedule_work(&data->work) == 0){
       printk("Failed to schedule work\n");
-      //exit(-1);
     } 
 }
 
@@ -78,11 +78,7 @@ static void work_handler(struct work_struct *work)
     struct power_supply *psy = power_supply_get_by_name("BAT1");
     union power_supply_propval chargenow,chargefull,voltage,intensity,capacity;
 
-    printd();
-    #if 0 
-      struct work_data * data = (struct work_data *)work;    
-      kfree(data);
-    #endif    
+    printd();   
 
     result|= power_supply_get_property(psy,POWER_SUPPLY_PROP_CHARGE_NOW,&chargenow);
     result|= power_supply_get_property(psy,POWER_SUPPLY_PROP_CHARGE_FULL,&chargefull);
@@ -110,7 +106,12 @@ static void work_handler(struct work_struct *work)
     fs = get_fs();
     set_fs(KERNEL_DS);
     data->fd->f_op->write(data->fd, buf, strlen(buf),&(data->fd->f_pos)); 
+    printk(KERN_INFO "Write buf %s with len %d\n",buf,strlen(buf));
     set_fs(fs);      
+
+    #if 0
+      kfree(data);
+    #endif
 
     //Relaunch timer
     ret = mod_timer(&timerBattery, jiffies + msecs_to_jiffies(TIMER_LENGTH));
@@ -127,7 +128,6 @@ static int wq_init(void)
     printd();
     
     mm_segment_t fs; 
-    struct file *fd;
 
     data = kmalloc(sizeof(struct work_data), GFP_KERNEL);
     timer_register(&timerBattery,TIMER_LENGTH);
@@ -157,7 +157,6 @@ static int wq_init(void)
          
         data->fd = fd;	    
         INIT_WORK(&data->work, work_handler);
-        
  
         initialised = 1;
     }
@@ -179,11 +178,10 @@ static void wq_exit(void)
     fs = get_fs();
     set_fs(KERNEL_DS);
     
-    #if 0
-      if(fd)
-        filp_close(fd,NULL);
-    #endif
-
+    
+    if(fd)
+      filp_close(fd,NULL);
+    
     set_fs(fs);
     
 
@@ -199,3 +197,4 @@ MODULE_AUTHOR("alexy <alexy.debus@eleves.ec-nantes.fr>");
 MODULE_DESCRIPTION("Battery module");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
+
