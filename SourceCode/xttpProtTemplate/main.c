@@ -120,7 +120,7 @@ static void *realtime_thread(void *arg)
         
         for (;;) {
                
-                //Warning : blocking call here...
+                //Warning : blocking call here... Need to use select
                 ret = recvfrom(s, buf, BATT_READ_MSG_LENGTH, 0, NULL, 0);
                 if (ret <= 0)
                         fail("recvfrom");

@@ -15,7 +15,11 @@
 
 
 #define TIMER_LENGTH 5000 /*Call interval*/ 
+
 #define BATTERY_NAME "BAT1"
+
+#define BATTERY_SIZE 100
+#define PRODUCED_ENERGY 5
 
 #define MAX_SIZE_BUF 3*(sizeof(int)+1)
 
@@ -101,7 +105,7 @@ static void work_handler(struct work_struct *work)
     struct work_data *data = container_of(work, struct work_data, work);
       
     //Write
-    n = sprintf(buf,"[%d,%d,%d]\n",capacity,chargenow,chargefull);
+    n = sprintf(buf,"[%d,%d,%d,%d,%d]\n",capacity,chargenow,chargefull,BATTERY_SIZE,PRODUCED_ENERGY);
     
     fs = get_fs();
     set_fs(KERNEL_DS);
