@@ -1,0 +1,2926 @@
+From f9b4924273b3b35429761b9684896f7ead0955f3 Mon Sep 17 00:00:00 2001
+From: Souchu Bastien <bsouchu@gmail.com>
+Date: Wed, 17 Mar 2021 09:29:47 +0100
+Subject: [PATCH 1/8] git ignore
+
+---
+ .gitignore | 803 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 803 insertions(+)
+
+diff --git a/.gitignore b/.gitignore
+index b1d682032..038654414 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -15,3 +15,806 @@ config/missing
+ configure
+ aclocal.m4
+ autom4te.cache
++Makefile
++config.log
++config.status
++libtool
++demo/alchemy/altency
++demo/alchemy/altency-altency.o
++demo/alchemy/.deps/altency-altency.Po
++demo/alchemy/.libs/altency
++demo/alchemy/cobalt/cross_link-cross-link.o
++demo/alchemy/cobalt/cross-link
++demo/alchemy/cobalt/.deps/cross_link-cross-link.Po
++demo/alchemy/cobalt/.libs/cross-link
++demo/posix/cobalt/bufp_label-bufp-label.o
++demo/posix/cobalt/bufp_readwrite-bufp-readwrite.o
++demo/posix/cobalt/bufp-label
++demo/posix/cobalt/bufp-readwrite
++demo/posix/cobalt/can_rtt
++demo/posix/cobalt/can_rtt-can-rtt.o
++demo/posix/cobalt/eth_p_all
++demo/posix/cobalt/eth_p_all-eth_p_all.o
++demo/posix/cobalt/gpiopwm
++demo/posix/cobalt/gpiopwm-gpiopwm.o
++demo/posix/cobalt/iddp_label-iddp-label.o
++demo/posix/cobalt/iddp_sendrecv-iddp-sendrecv.o
++demo/posix/cobalt/iddp-label
++demo/posix/cobalt/iddp-sendrecv
++demo/posix/cobalt/xddp_echo-xddp-echo.o
++demo/posix/cobalt/xddp_label-xddp-label.o
++demo/posix/cobalt/xddp_stream-xddp-stream.o
++demo/posix/cobalt/xddp-echo
++demo/posix/cobalt/xddp-label
++demo/posix/cobalt/xddp-stream
++demo/posix/cobalt/.deps/bufp_label-bufp-label.Po
++demo/posix/cobalt/.deps/bufp_readwrite-bufp-readwrite.Po
++demo/posix/cobalt/.deps/can_rtt-can-rtt.Po
++demo/posix/cobalt/.deps/eth_p_all-eth_p_all.Po
++demo/posix/cobalt/.deps/gpiopwm-gpiopwm.Po
++demo/posix/cobalt/.deps/iddp_label-iddp-label.Po
++demo/posix/cobalt/.deps/iddp_sendrecv-iddp-sendrecv.Po
++demo/posix/cobalt/.deps/xddp_echo-xddp-echo.Po
++demo/posix/cobalt/.deps/xddp_label-xddp-label.Po
++demo/posix/cobalt/.deps/xddp_stream-xddp-stream.Po
++demo/posix/cobalt/.libs/bufp-label
++demo/posix/cobalt/.libs/bufp-readwrite
++demo/posix/cobalt/.libs/can_rtt
++demo/posix/cobalt/.libs/eth_p_all
++demo/posix/cobalt/.libs/gpiopwm
++demo/posix/cobalt/.libs/iddp-label
++demo/posix/cobalt/.libs/iddp-sendrecv
++demo/posix/cobalt/.libs/xddp-echo
++demo/posix/cobalt/.libs/xddp-label
++demo/posix/cobalt/.libs/xddp-stream
++demo/posix/cyclictest/cyclictest
++demo/posix/cyclictest/cyclictest-cyclictest.o
++demo/posix/cyclictest/cyclictest-error.o
++demo/posix/cyclictest/cyclictest-rt-utils.o
++demo/posix/cyclictest/.deps/cyclictest-cyclictest.Po
++demo/posix/cyclictest/.deps/cyclictest-error.Po
++demo/posix/cyclictest/.deps/cyclictest-rt-utils.Po
++demo/posix/cyclictest/.libs/cyclictest
++doc/doxygen/xeno3prm-common.conf
++doc/doxygen/xeno3prm-html.conf
++doc/doxygen/xeno3prm-latex.conf
++include/stamp-h1
++include/xeno_config.h
++lib/alchemy/libalchemy_la-alarm.lo
++lib/alchemy/libalchemy_la-alarm.o
++lib/alchemy/libalchemy_la-buffer.lo
++lib/alchemy/libalchemy_la-buffer.o
++lib/alchemy/libalchemy_la-cond.lo
++lib/alchemy/libalchemy_la-cond.o
++lib/alchemy/libalchemy_la-event.lo
++lib/alchemy/libalchemy_la-event.o
++lib/alchemy/libalchemy_la-heap.lo
++lib/alchemy/libalchemy_la-heap.o
++lib/alchemy/libalchemy_la-init.lo
++lib/alchemy/libalchemy_la-init.o
++lib/alchemy/libalchemy_la-internal.lo
++lib/alchemy/libalchemy_la-internal.o
++lib/alchemy/libalchemy_la-mutex.lo
++lib/alchemy/libalchemy_la-mutex.o
++lib/alchemy/libalchemy_la-pipe.lo
++lib/alchemy/libalchemy_la-pipe.o
++lib/alchemy/libalchemy_la-queue.lo
++lib/alchemy/libalchemy_la-queue.o
++lib/alchemy/libalchemy_la-sem.lo
++lib/alchemy/libalchemy_la-sem.o
++lib/alchemy/libalchemy_la-task.lo
++lib/alchemy/libalchemy_la-task.o
++lib/alchemy/libalchemy_la-timer.lo
++lib/alchemy/libalchemy_la-timer.o
++lib/alchemy/libalchemy.la
++lib/alchemy/.deps/libalchemy_la-alarm.Plo
++lib/alchemy/.deps/libalchemy_la-buffer.Plo
++lib/alchemy/.deps/libalchemy_la-cond.Plo
++lib/alchemy/.deps/libalchemy_la-event.Plo
++lib/alchemy/.deps/libalchemy_la-heap.Plo
++lib/alchemy/.deps/libalchemy_la-init.Plo
++lib/alchemy/.deps/libalchemy_la-internal.Plo
++lib/alchemy/.deps/libalchemy_la-mutex.Plo
++lib/alchemy/.deps/libalchemy_la-pipe.Plo
++lib/alchemy/.deps/libalchemy_la-queue.Plo
++lib/alchemy/.deps/libalchemy_la-sem.Plo
++lib/alchemy/.deps/libalchemy_la-task.Plo
++lib/alchemy/.deps/libalchemy_la-timer.Plo
++lib/alchemy/.libs/libalchemy_la-alarm.o
++lib/alchemy/.libs/libalchemy_la-buffer.o
++lib/alchemy/.libs/libalchemy_la-cond.o
++lib/alchemy/.libs/libalchemy_la-event.o
++lib/alchemy/.libs/libalchemy_la-heap.o
++lib/alchemy/.libs/libalchemy_la-init.o
++lib/alchemy/.libs/libalchemy_la-internal.o
++lib/alchemy/.libs/libalchemy_la-mutex.o
++lib/alchemy/.libs/libalchemy_la-pipe.o
++lib/alchemy/.libs/libalchemy_la-queue.o
++lib/alchemy/.libs/libalchemy_la-sem.o
++lib/alchemy/.libs/libalchemy_la-task.o
++lib/alchemy/.libs/libalchemy_la-timer.o
++lib/alchemy/.libs/libalchemy.a
++lib/alchemy/.libs/libalchemy.la
++lib/alchemy/.libs/libalchemy.lai
++lib/alchemy/.libs/libalchemy.so
++lib/alchemy/.libs/libalchemy.so.0
++lib/alchemy/.libs/libalchemy.so.0.0.0
++lib/alchemy/.libs/libalchemy.so.0.0.0T
++lib/analogy/libanalogy_la-async.lo
++lib/analogy/libanalogy_la-async.o
++lib/analogy/libanalogy_la-calibration.lo
++lib/analogy/libanalogy_la-calibration.o
++lib/analogy/libanalogy_la-descriptor.lo
++lib/analogy/libanalogy_la-descriptor.o
++lib/analogy/libanalogy_la-info.lo
++lib/analogy/libanalogy_la-info.o
++lib/analogy/libanalogy_la-math.lo
++lib/analogy/libanalogy_la-math.o
++lib/analogy/libanalogy_la-range.lo
++lib/analogy/libanalogy_la-range.o
++lib/analogy/libanalogy_la-sync.lo
++lib/analogy/libanalogy_la-sync.o
++lib/analogy/libanalogy_la-sys.lo
++lib/analogy/libanalogy_la-sys.o
++lib/analogy/libanalogy.la
++lib/analogy/.deps/libanalogy_la-async.Plo
++lib/analogy/.deps/libanalogy_la-calibration.Plo
++lib/analogy/.deps/libanalogy_la-descriptor.Plo
++lib/analogy/.deps/libanalogy_la-info.Plo
++lib/analogy/.deps/libanalogy_la-math.Plo
++lib/analogy/.deps/libanalogy_la-range.Plo
++lib/analogy/.deps/libanalogy_la-sync.Plo
++lib/analogy/.deps/libanalogy_la-sys.Plo
++lib/analogy/.libs/libanalogy_la-async.o
++lib/analogy/.libs/libanalogy_la-calibration.o
++lib/analogy/.libs/libanalogy_la-descriptor.o
++lib/analogy/.libs/libanalogy_la-info.o
++lib/analogy/.libs/libanalogy_la-math.o
++lib/analogy/.libs/libanalogy_la-range.o
++lib/analogy/.libs/libanalogy_la-sync.o
++lib/analogy/.libs/libanalogy_la-sys.o
++lib/analogy/.libs/libanalogy.a
++lib/analogy/.libs/libanalogy.la
++lib/analogy/.libs/libanalogy.lai
++lib/analogy/.libs/libanalogy.so
++lib/analogy/.libs/libanalogy.so.1
++lib/analogy/.libs/libanalogy.so.1.0.0
++lib/analogy/.libs/libanalogy.so.1.0.0T
++lib/boilerplate/config-dump.h
++lib/boilerplate/git-stamp.h
++lib/boilerplate/libavl_la-avl.lo
++lib/boilerplate/libavl_la-avl.o
++lib/boilerplate/libavl.la
++lib/boilerplate/libboilerplate_la-ancillaries.lo
++lib/boilerplate/libboilerplate_la-ancillaries.o
++lib/boilerplate/libboilerplate_la-hash.lo
++lib/boilerplate/libboilerplate_la-hash.o
++lib/boilerplate/libboilerplate_la-heapmem.lo
++lib/boilerplate/libboilerplate_la-heapmem.o
++lib/boilerplate/libboilerplate_la-setup.lo
++lib/boilerplate/libboilerplate_la-setup.o
++lib/boilerplate/libboilerplate_la-time.lo
++lib/boilerplate/libboilerplate_la-time.o
++lib/boilerplate/libboilerplate.la
++lib/boilerplate/libiniparser.la
++lib/boilerplate/libtlsf.la
++lib/boilerplate/libversion_la-version.lo
++lib/boilerplate/libversion_la-version.o
++lib/boilerplate/libversion.la
++lib/boilerplate/version
++lib/boilerplate/version-version.o
++lib/boilerplate/.deps/libavl_la-avl.Plo
++lib/boilerplate/.deps/libboilerplate_la-ancillaries.Plo
++lib/boilerplate/.deps/libboilerplate_la-debug.Plo
++lib/boilerplate/.deps/libboilerplate_la-hash.Plo
++lib/boilerplate/.deps/libboilerplate_la-heapmem.Plo
++lib/boilerplate/.deps/libboilerplate_la-obstack.Plo
++lib/boilerplate/.deps/libboilerplate_la-setup.Plo
++lib/boilerplate/.deps/libboilerplate_la-time.Plo
++lib/boilerplate/.deps/libshavl_la-avl.Plo
++lib/boilerplate/.deps/libversion_la-version.Plo
++lib/boilerplate/.deps/version-version.Po
++lib/boilerplate/.libs/libavl_la-avl.o
++lib/boilerplate/.libs/libavl.a
++lib/boilerplate/.libs/libavl.la
++lib/boilerplate/.libs/libboilerplate_la-ancillaries.o
++lib/boilerplate/.libs/libboilerplate_la-hash.o
++lib/boilerplate/.libs/libboilerplate_la-heapmem.o
++lib/boilerplate/.libs/libboilerplate_la-setup.o
++lib/boilerplate/.libs/libboilerplate_la-time.o
++lib/boilerplate/.libs/libboilerplate.a
++lib/boilerplate/.libs/libboilerplate.la
++lib/boilerplate/.libs/libiniparser.a
++lib/boilerplate/.libs/libiniparser.la
++lib/boilerplate/.libs/libtlsf.a
++lib/boilerplate/.libs/libtlsf.la
++lib/boilerplate/.libs/libversion_la-version.o
++lib/boilerplate/.libs/libversion.a
++lib/boilerplate/.libs/libversion.la
++lib/boilerplate/iniparser/.dirstamp
++lib/boilerplate/iniparser/libiniparser_la-dictionary.lo
++lib/boilerplate/iniparser/libiniparser_la-dictionary.o
++lib/boilerplate/iniparser/libiniparser_la-iniparser.lo
++lib/boilerplate/iniparser/libiniparser_la-iniparser.o
++lib/boilerplate/iniparser/.deps/.dirstamp
++lib/boilerplate/iniparser/.deps/libiniparser_la-dictionary.Plo
++lib/boilerplate/iniparser/.deps/libiniparser_la-iniparser.Plo
++lib/boilerplate/iniparser/.libs/libiniparser_la-dictionary.o
++lib/boilerplate/iniparser/.libs/libiniparser_la-iniparser.o
++lib/boilerplate/init/bootstrap-internal.o
++lib/boilerplate/init/libbootstrap_a-bootstrap.o
++lib/boilerplate/init/libbootstrap_pic_la-bootstrap.lo
++lib/boilerplate/init/libbootstrap_pic_la-bootstrap.o
++lib/boilerplate/init/libbootstrap-pic.la
++lib/boilerplate/init/libbootstrap.a
++lib/boilerplate/init/.deps/libbootstrap_a-bootstrap.Po
++lib/boilerplate/init/.deps/libbootstrap_pic_la-bootstrap.Plo
++lib/boilerplate/init/.libs/libbootstrap_pic_la-bootstrap.o
++lib/boilerplate/init/.libs/libbootstrap-pic.a
++lib/boilerplate/init/.libs/libbootstrap-pic.la
++lib/boilerplate/tlsf/.dirstamp
++lib/boilerplate/tlsf/libtlsf_la-tlsf.lo
++lib/boilerplate/tlsf/libtlsf_la-tlsf.o
++lib/boilerplate/tlsf/.deps/.dirstamp
++lib/boilerplate/tlsf/.deps/libtlsf_la-tlsf.Plo
++lib/boilerplate/tlsf/.libs/libtlsf_la-tlsf.o
++lib/cobalt/libcobalt_la-attr.lo
++lib/cobalt/libcobalt_la-attr.o
++lib/cobalt/libcobalt_la-clock.lo
++lib/cobalt/libcobalt_la-clock.o
++lib/cobalt/libcobalt_la-cond.lo
++lib/cobalt/libcobalt_la-cond.o
++lib/cobalt/libcobalt_la-current.lo
++lib/cobalt/libcobalt_la-current.o
++lib/cobalt/libcobalt_la-init.lo
++lib/cobalt/libcobalt_la-init.o
++lib/cobalt/libcobalt_la-internal.lo
++lib/cobalt/libcobalt_la-internal.o
++lib/cobalt/libcobalt_la-mq.lo
++lib/cobalt/libcobalt_la-mq.o
++lib/cobalt/libcobalt_la-mutex.lo
++lib/cobalt/libcobalt_la-mutex.o
++lib/cobalt/libcobalt_la-printf.lo
++lib/cobalt/libcobalt_la-printf.o
++lib/cobalt/libcobalt_la-rtdm.lo
++lib/cobalt/libcobalt_la-rtdm.o
++lib/cobalt/libcobalt_la-sched.lo
++lib/cobalt/libcobalt_la-sched.o
++lib/cobalt/libcobalt_la-select.lo
++lib/cobalt/libcobalt_la-select.o
++lib/cobalt/libcobalt_la-semaphore.lo
++lib/cobalt/libcobalt_la-semaphore.o
++lib/cobalt/libcobalt_la-signal.lo
++lib/cobalt/libcobalt_la-signal.o
++lib/cobalt/libcobalt_la-sigshadow.lo
++lib/cobalt/libcobalt_la-sigshadow.o
++lib/cobalt/libcobalt_la-thread.lo
++lib/cobalt/libcobalt_la-thread.o
++lib/cobalt/libcobalt_la-ticks.lo
++lib/cobalt/libcobalt_la-ticks.o
++lib/cobalt/libcobalt_la-timer.lo
++lib/cobalt/libcobalt_la-timer.o
++lib/cobalt/libcobalt_la-timerfd.lo
++lib/cobalt/libcobalt_la-timerfd.o
++lib/cobalt/libcobalt_la-trace.lo
++lib/cobalt/libcobalt_la-trace.o
++lib/cobalt/libcobalt_la-umm.lo
++lib/cobalt/libcobalt_la-umm.o
++lib/cobalt/libcobalt_la-wrappers.lo
++lib/cobalt/libcobalt_la-wrappers.o
++lib/cobalt/libcobalt.la
++lib/cobalt/libmodechk_la-malloc-nowrap.lo
++lib/cobalt/libmodechk_la-malloc-nowrap.o
++lib/cobalt/libmodechk_la-malloc.lo
++lib/cobalt/libmodechk_la-malloc.o
++lib/cobalt/libmodechk.la
++lib/cobalt/.deps/libcobalt_la-attr.Plo
++lib/cobalt/.deps/libcobalt_la-clock.Plo
++lib/cobalt/.deps/libcobalt_la-cond.Plo
++lib/cobalt/.deps/libcobalt_la-current.Plo
++lib/cobalt/.deps/libcobalt_la-init.Plo
++lib/cobalt/.deps/libcobalt_la-internal.Plo
++lib/cobalt/.deps/libcobalt_la-mq.Plo
++lib/cobalt/.deps/libcobalt_la-mutex.Plo
++lib/cobalt/.deps/libcobalt_la-printf.Plo
++lib/cobalt/.deps/libcobalt_la-rtdm.Plo
++lib/cobalt/.deps/libcobalt_la-sched.Plo
++lib/cobalt/.deps/libcobalt_la-select.Plo
++lib/cobalt/.deps/libcobalt_la-semaphore.Plo
++lib/cobalt/.deps/libcobalt_la-signal.Plo
++lib/cobalt/.deps/libcobalt_la-sigshadow.Plo
++lib/cobalt/.deps/libcobalt_la-thread.Plo
++lib/cobalt/.deps/libcobalt_la-ticks.Plo
++lib/cobalt/.deps/libcobalt_la-timer.Plo
++lib/cobalt/.deps/libcobalt_la-timerfd.Plo
++lib/cobalt/.deps/libcobalt_la-trace.Plo
++lib/cobalt/.deps/libcobalt_la-umm.Plo
++lib/cobalt/.deps/libcobalt_la-wrappers.Plo
++lib/cobalt/.deps/libmodechk_la-malloc-nowrap.Plo
++lib/cobalt/.deps/libmodechk_la-malloc.Plo
++lib/cobalt/.libs/libcobalt_la-attr.o
++lib/cobalt/.libs/libcobalt_la-clock.o
++lib/cobalt/.libs/libcobalt_la-cond.o
++lib/cobalt/.libs/libcobalt_la-current.o
++lib/cobalt/.libs/libcobalt_la-init.o
++lib/cobalt/.libs/libcobalt_la-internal.o
++lib/cobalt/.libs/libcobalt_la-mq.o
++lib/cobalt/.libs/libcobalt_la-mutex.o
++lib/cobalt/.libs/libcobalt_la-printf.o
++lib/cobalt/.libs/libcobalt_la-rtdm.o
++lib/cobalt/.libs/libcobalt_la-sched.o
++lib/cobalt/.libs/libcobalt_la-select.o
++lib/cobalt/.libs/libcobalt_la-semaphore.o
++lib/cobalt/.libs/libcobalt_la-signal.o
++lib/cobalt/.libs/libcobalt_la-sigshadow.o
++lib/cobalt/.libs/libcobalt_la-thread.o
++lib/cobalt/.libs/libcobalt_la-ticks.o
++lib/cobalt/.libs/libcobalt_la-timer.o
++lib/cobalt/.libs/libcobalt_la-timerfd.o
++lib/cobalt/.libs/libcobalt_la-trace.o
++lib/cobalt/.libs/libcobalt_la-umm.o
++lib/cobalt/.libs/libcobalt_la-wrappers.o
++lib/cobalt/.libs/libcobalt.a
++lib/cobalt/.libs/libcobalt.la
++lib/cobalt/.libs/libcobalt.lai
++lib/cobalt/.libs/libcobalt.so
++lib/cobalt/.libs/libcobalt.so.2
++lib/cobalt/.libs/libcobalt.so.2.0.0
++lib/cobalt/.libs/libmodechk_la-malloc-nowrap.o
++lib/cobalt/.libs/libmodechk_la-malloc.o
++lib/cobalt/.libs/libmodechk.a
++lib/cobalt/.libs/libmodechk.la
++lib/cobalt/.libs/libmodechk.lai
++lib/cobalt/.libs/libmodechk.so
++lib/cobalt/.libs/libmodechk.so.0
++lib/cobalt/.libs/libmodechk.so.0.0.0
++lib/cobalt/.libs/libmodechk.so.0.0.0T
++lib/cobalt/arch/arm/.deps/libarch_la-features.Plo
++lib/cobalt/arch/arm64/.deps/libarch_la-features.Plo
++lib/cobalt/arch/powerpc/.deps/libarch_la-features.Plo
++lib/cobalt/arch/x86/libarch_la-features.lo
++lib/cobalt/arch/x86/libarch_la-features.o
++lib/cobalt/arch/x86/libarch.la
++lib/cobalt/arch/x86/.deps/libarch_la-features.Plo
++lib/cobalt/arch/x86/.libs/libarch_la-features.o
++lib/cobalt/arch/x86/.libs/libarch.a
++lib/cobalt/arch/x86/.libs/libarch.la
++lib/copperplate/libcopperplate_la-clockobj.lo
++lib/copperplate/libcopperplate_la-clockobj.o
++lib/copperplate/libcopperplate_la-cluster.lo
++lib/copperplate/libcopperplate_la-cluster.o
++lib/copperplate/libcopperplate_la-eventobj.lo
++lib/copperplate/libcopperplate_la-eventobj.o
++lib/copperplate/libcopperplate_la-heapobj-heapmem.lo
++lib/copperplate/libcopperplate_la-heapobj-heapmem.o
++lib/copperplate/libcopperplate_la-init.lo
++lib/copperplate/libcopperplate_la-init.o
++lib/copperplate/libcopperplate_la-internal.lo
++lib/copperplate/libcopperplate_la-internal.o
++lib/copperplate/libcopperplate_la-semobj.lo
++lib/copperplate/libcopperplate_la-semobj.o
++lib/copperplate/libcopperplate_la-syncobj.lo
++lib/copperplate/libcopperplate_la-syncobj.o
++lib/copperplate/libcopperplate_la-threadobj.lo
++lib/copperplate/libcopperplate_la-threadobj.o
++lib/copperplate/libcopperplate_la-timerobj.lo
++lib/copperplate/libcopperplate_la-timerobj.o
++lib/copperplate/libcopperplate_la-traceobj.lo
++lib/copperplate/libcopperplate_la-traceobj.o
++lib/copperplate/libcopperplate.la
++lib/copperplate/.deps/libcopperplate_la-clockobj.Plo
++lib/copperplate/.deps/libcopperplate_la-cluster.Plo
++lib/copperplate/.deps/libcopperplate_la-eventobj.Plo
++lib/copperplate/.deps/libcopperplate_la-heapobj-heapmem.Plo
++lib/copperplate/.deps/libcopperplate_la-heapobj-malloc.Plo
++lib/copperplate/.deps/libcopperplate_la-heapobj-pshared.Plo
++lib/copperplate/.deps/libcopperplate_la-heapobj-tlsf.Plo
++lib/copperplate/.deps/libcopperplate_la-init.Plo
++lib/copperplate/.deps/libcopperplate_la-internal.Plo
++lib/copperplate/.deps/libcopperplate_la-reference.Plo
++lib/copperplate/.deps/libcopperplate_la-semobj.Plo
++lib/copperplate/.deps/libcopperplate_la-syncobj.Plo
++lib/copperplate/.deps/libcopperplate_la-threadobj.Plo
++lib/copperplate/.deps/libcopperplate_la-timerobj.Plo
++lib/copperplate/.deps/libcopperplate_la-traceobj.Plo
++lib/copperplate/.deps/libregistry_la-registry.Plo
++lib/copperplate/.libs/libcopperplate_la-clockobj.o
++lib/copperplate/.libs/libcopperplate_la-cluster.o
++lib/copperplate/.libs/libcopperplate_la-eventobj.o
++lib/copperplate/.libs/libcopperplate_la-heapobj-heapmem.o
++lib/copperplate/.libs/libcopperplate_la-init.o
++lib/copperplate/.libs/libcopperplate_la-internal.o
++lib/copperplate/.libs/libcopperplate_la-semobj.o
++lib/copperplate/.libs/libcopperplate_la-syncobj.o
++lib/copperplate/.libs/libcopperplate_la-threadobj.o
++lib/copperplate/.libs/libcopperplate_la-timerobj.o
++lib/copperplate/.libs/libcopperplate_la-traceobj.o
++lib/copperplate/.libs/libcopperplate.a
++lib/copperplate/.libs/libcopperplate.la
++lib/copperplate/.libs/libcopperplate.lai
++lib/copperplate/.libs/libcopperplate.so
++lib/copperplate/.libs/libcopperplate.so.0
++lib/copperplate/.libs/libcopperplate.so.0.0.0
++lib/copperplate/.libs/libcopperplate.so.0.0.0T
++lib/copperplate/regd/.deps/fs-cobalt.Po
++lib/copperplate/regd/.deps/fs-common.Po
++lib/copperplate/regd/.deps/fs-mercury.Po
++lib/copperplate/regd/.deps/regd.Po
++lib/psos/libpsos_la-init.lo
++lib/psos/libpsos_la-init.o
++lib/psos/libpsos_la-pt.lo
++lib/psos/libpsos_la-pt.o
++lib/psos/libpsos_la-queue.lo
++lib/psos/libpsos_la-queue.o
++lib/psos/libpsos_la-rn.lo
++lib/psos/libpsos_la-rn.o
++lib/psos/libpsos_la-sem.lo
++lib/psos/libpsos_la-sem.o
++lib/psos/libpsos_la-task.lo
++lib/psos/libpsos_la-task.o
++lib/psos/libpsos_la-tm.lo
++lib/psos/libpsos_la-tm.o
++lib/psos/libpsos.la
++lib/psos/.deps/libpsos_la-init.Plo
++lib/psos/.deps/libpsos_la-pt.Plo
++lib/psos/.deps/libpsos_la-queue.Plo
++lib/psos/.deps/libpsos_la-rn.Plo
++lib/psos/.deps/libpsos_la-sem.Plo
++lib/psos/.deps/libpsos_la-task.Plo
++lib/psos/.deps/libpsos_la-tm.Plo
++lib/psos/.libs/libpsos_la-init.o
++lib/psos/.libs/libpsos_la-pt.o
++lib/psos/.libs/libpsos_la-queue.o
++lib/psos/.libs/libpsos_la-rn.o
++lib/psos/.libs/libpsos_la-sem.o
++lib/psos/.libs/libpsos_la-task.o
++lib/psos/.libs/libpsos_la-tm.o
++lib/psos/.libs/libpsos.a
++lib/psos/.libs/libpsos.la
++lib/psos/.libs/libpsos.lai
++lib/psos/.libs/libpsos.so
++lib/psos/.libs/libpsos.so.0
++lib/psos/.libs/libpsos.so.0.0.0
++lib/psos/.libs/libpsos.so.0.0.0T
++lib/smokey/libsmokey_la-helpers.lo
++lib/smokey/libsmokey_la-helpers.o
++lib/smokey/libsmokey_la-init.lo
++lib/smokey/libsmokey_la-init.o
++lib/smokey/libsmokey.la
++lib/smokey/.deps/libsmokey_la-helpers.Plo
++lib/smokey/.deps/libsmokey_la-init.Plo
++lib/smokey/.libs/libsmokey_la-helpers.o
++lib/smokey/.libs/libsmokey_la-init.o
++lib/smokey/.libs/libsmokey.a
++lib/smokey/.libs/libsmokey.la
++lib/smokey/.libs/libsmokey.lai
++lib/smokey/.libs/libsmokey.so
++lib/smokey/.libs/libsmokey.so.0
++lib/smokey/.libs/libsmokey.so.0.0.0
++lib/smokey/.libs/libsmokey.so.0.0.0T
++lib/trank/libtrank_la-init.lo
++lib/trank/libtrank_la-init.o
++lib/trank/libtrank_la-internal.lo
++lib/trank/libtrank_la-internal.o
++lib/trank/libtrank_la-native.lo
++lib/trank/libtrank_la-native.o
++lib/trank/libtrank_la-posix.lo
++lib/trank/libtrank_la-posix.o
++lib/trank/libtrank.la
++lib/trank/.deps/libtrank_la-init.Plo
++lib/trank/.deps/libtrank_la-internal.Plo
++lib/trank/.deps/libtrank_la-native.Plo
++lib/trank/.deps/libtrank_la-posix.Plo
++lib/trank/.libs/libtrank_la-init.o
++lib/trank/.libs/libtrank_la-internal.o
++lib/trank/.libs/libtrank_la-native.o
++lib/trank/.libs/libtrank_la-posix.o
++lib/trank/.libs/libtrank.a
++lib/trank/.libs/libtrank.la
++lib/trank/.libs/libtrank.lai
++lib/trank/.libs/libtrank.so
++lib/trank/.libs/libtrank.so.0
++lib/trank/.libs/libtrank.so.0.0.0
++lib/trank/.libs/libtrank.so.0.0.0T
++lib/vxworks/libvxworks_la-errnoLib.lo
++lib/vxworks/libvxworks_la-errnoLib.o
++lib/vxworks/libvxworks_la-init.lo
++lib/vxworks/libvxworks_la-init.o
++lib/vxworks/libvxworks_la-intLib.lo
++lib/vxworks/libvxworks_la-intLib.o
++lib/vxworks/libvxworks_la-kernLib.lo
++lib/vxworks/libvxworks_la-kernLib.o
++lib/vxworks/libvxworks_la-lstLib.lo
++lib/vxworks/libvxworks_la-lstLib.o
++lib/vxworks/libvxworks_la-memPartLib.lo
++lib/vxworks/libvxworks_la-memPartLib.o
++lib/vxworks/libvxworks_la-msgQLib.lo
++lib/vxworks/libvxworks_la-msgQLib.o
++lib/vxworks/libvxworks_la-rngLib.lo
++lib/vxworks/libvxworks_la-rngLib.o
++lib/vxworks/libvxworks_la-semLib.lo
++lib/vxworks/libvxworks_la-semLib.o
++lib/vxworks/libvxworks_la-sysLib.lo
++lib/vxworks/libvxworks_la-sysLib.o
++lib/vxworks/libvxworks_la-taskHookLib.lo
++lib/vxworks/libvxworks_la-taskHookLib.o
++lib/vxworks/libvxworks_la-taskInfo.lo
++lib/vxworks/libvxworks_la-taskInfo.o
++lib/vxworks/libvxworks_la-taskLib.lo
++lib/vxworks/libvxworks_la-taskLib.o
++lib/vxworks/libvxworks_la-tickLib.lo
++lib/vxworks/libvxworks_la-tickLib.o
++lib/vxworks/libvxworks_la-wdLib.lo
++lib/vxworks/libvxworks_la-wdLib.o
++lib/vxworks/libvxworks.la
++lib/vxworks/.deps/libvxworks_la-errnoLib.Plo
++lib/vxworks/.deps/libvxworks_la-init.Plo
++lib/vxworks/.deps/libvxworks_la-intLib.Plo
++lib/vxworks/.deps/libvxworks_la-kernLib.Plo
++lib/vxworks/.deps/libvxworks_la-lstLib.Plo
++lib/vxworks/.deps/libvxworks_la-memPartLib.Plo
++lib/vxworks/.deps/libvxworks_la-msgQLib.Plo
++lib/vxworks/.deps/libvxworks_la-rngLib.Plo
++lib/vxworks/.deps/libvxworks_la-semLib.Plo
++lib/vxworks/.deps/libvxworks_la-sysLib.Plo
++lib/vxworks/.deps/libvxworks_la-taskHookLib.Plo
++lib/vxworks/.deps/libvxworks_la-taskInfo.Plo
++lib/vxworks/.deps/libvxworks_la-taskLib.Plo
++lib/vxworks/.deps/libvxworks_la-tickLib.Plo
++lib/vxworks/.deps/libvxworks_la-wdLib.Plo
++lib/vxworks/.libs/libvxworks_la-errnoLib.o
++lib/vxworks/.libs/libvxworks_la-init.o
++lib/vxworks/.libs/libvxworks_la-intLib.o
++lib/vxworks/.libs/libvxworks_la-kernLib.o
++lib/vxworks/.libs/libvxworks_la-lstLib.o
++lib/vxworks/.libs/libvxworks_la-memPartLib.o
++lib/vxworks/.libs/libvxworks_la-msgQLib.o
++lib/vxworks/.libs/libvxworks_la-rngLib.o
++lib/vxworks/.libs/libvxworks_la-semLib.o
++lib/vxworks/.libs/libvxworks_la-sysLib.o
++lib/vxworks/.libs/libvxworks_la-taskHookLib.o
++lib/vxworks/.libs/libvxworks_la-taskInfo.o
++lib/vxworks/.libs/libvxworks_la-taskLib.o
++lib/vxworks/.libs/libvxworks_la-tickLib.o
++lib/vxworks/.libs/libvxworks_la-wdLib.o
++lib/vxworks/.libs/libvxworks.a
++lib/vxworks/.libs/libvxworks.la
++lib/vxworks/.libs/libvxworks.lai
++lib/vxworks/.libs/libvxworks.so
++lib/vxworks/.libs/libvxworks.so.0
++lib/vxworks/.libs/libvxworks.so.0.0.0
++lib/vxworks/.libs/libvxworks.so.0.0.0T
++scripts/xeno
++scripts/xeno-config
++testsuite/clocktest/clocktest
++testsuite/clocktest/clocktest-clocktest.o
++testsuite/clocktest/.deps/clocktest-clocktest.Po
++testsuite/clocktest/.libs/clocktest
++testsuite/gpiobench/gpiobench
++testsuite/gpiobench/gpiobench-gpiobench.o
++testsuite/gpiobench/.deps/gpiobench-gpiobench.Po
++testsuite/gpiobench/.libs/gpiobench
++testsuite/gpiotest/gpiotest
++testsuite/gpiotest/gpiotest-gpiotest.o
++testsuite/gpiotest/.deps/gpiotest-gpiotest.Po
++testsuite/gpiotest/.libs/gpiotest
++testsuite/latency/latency
++testsuite/latency/latency-latency.o
++testsuite/latency/.deps/latency-latency.Po
++testsuite/latency/.libs/latency
++testsuite/smokey/smokey
++testsuite/smokey/smokey-main.o
++testsuite/smokey/.deps/smokey-main.Po
++testsuite/smokey/.libs/smokey
++testsuite/smokey/arith/libarith_a-arith-noinline.o
++testsuite/smokey/arith/libarith_a-arith.o
++testsuite/smokey/arith/libarith.a
++testsuite/smokey/arith/.deps/libarith_a-arith-noinline.Po
++testsuite/smokey/arith/.deps/libarith_a-arith.Po
++testsuite/smokey/bufp/libbufp_a-bufp.o
++testsuite/smokey/bufp/libbufp.a
++testsuite/smokey/bufp/.deps/libbufp_a-bufp.Po
++testsuite/smokey/cpu-affinity/libcpu_affinity_a-cpu-affinity.o
++testsuite/smokey/cpu-affinity/libcpu-affinity.a
++testsuite/smokey/cpu-affinity/.deps/libcpu_affinity_a-cpu-affinity.Po
++testsuite/smokey/dlopen/.deps/dlopentest-dlopentest.Po
++testsuite/smokey/dlopen/.deps/libalchemy_test_la-libalchemy-test.Plo
++testsuite/smokey/dlopen/.deps/libdlopen_a-dlopen.Po
++testsuite/smokey/dlopen/.deps/libposix_test_la-libposix-test.Plo
++testsuite/smokey/fpu-stress/libfpu_stress_a-fpu-stress.o
++testsuite/smokey/fpu-stress/libfpu-stress.a
++testsuite/smokey/fpu-stress/.deps/libfpu_stress_a-fpu-stress.Po
++testsuite/smokey/gdb/libgdb_a-gdb.o
++testsuite/smokey/gdb/libgdb.a
++testsuite/smokey/gdb/.deps/libgdb_a-gdb.Po
++testsuite/smokey/iddp/libiddp_a-iddp.o
++testsuite/smokey/iddp/libiddp.a
++testsuite/smokey/iddp/.deps/libiddp_a-iddp.Po
++testsuite/smokey/leaks/libleaks_a-leaks.o
++testsuite/smokey/leaks/libleaks.a
++testsuite/smokey/leaks/.deps/libleaks_a-leaks.Po
++testsuite/smokey/memcheck/libmemcheck.a
++testsuite/smokey/memcheck/memcheck.o
++testsuite/smokey/memcheck/.deps/memcheck.Po
++testsuite/smokey/memory-coreheap/libmemory_coreheap_a-coreheap.o
++testsuite/smokey/memory-coreheap/libmemory-coreheap.a
++testsuite/smokey/memory-coreheap/.deps/libmemory_coreheap_a-coreheap.Po
++testsuite/smokey/memory-heapmem/libmemory_heapmem_a-heapmem.o
++testsuite/smokey/memory-heapmem/libmemory-heapmem.a
++testsuite/smokey/memory-heapmem/.deps/libmemory_heapmem_a-heapmem.Po
++testsuite/smokey/memory-pshared/.deps/libmemory_pshared_a-pshared.Po
++testsuite/smokey/memory-tlsf/libmemory_tlsf_a-tlsf.o
++testsuite/smokey/memory-tlsf/libmemory-tlsf.a
++testsuite/smokey/memory-tlsf/.deps/libmemory_tlsf_a-tlsf.Po
++testsuite/smokey/net_common/client.o
++testsuite/smokey/net_common/libnet_common.a
++testsuite/smokey/net_common/server.o
++testsuite/smokey/net_common/setup.o
++testsuite/smokey/net_common/smokey_net_server
++testsuite/smokey/net_common/smokey_net_server.o
++testsuite/smokey/net_common/.deps/client.Po
++testsuite/smokey/net_common/.deps/server.Po
++testsuite/smokey/net_common/.deps/setup.Po
++testsuite/smokey/net_common/.deps/smokey_net_server.Po
++testsuite/smokey/net_common/.libs/smokey_net_server
++testsuite/smokey/net_packet_dgram/libnet_packet_dgram_a-packet_dgram.o
++testsuite/smokey/net_packet_dgram/libnet_packet_dgram.a
++testsuite/smokey/net_packet_dgram/.deps/libnet_packet_dgram_a-packet_dgram.Po
++testsuite/smokey/net_packet_raw/libnet_packet_raw_a-packet_raw.o
++testsuite/smokey/net_packet_raw/libnet_packet_raw.a
++testsuite/smokey/net_packet_raw/.deps/libnet_packet_raw_a-packet_raw.Po
++testsuite/smokey/net_udp/libnet_udp_a-udp.o
++testsuite/smokey/net_udp/libnet_udp.a
++testsuite/smokey/net_udp/.deps/libnet_udp_a-udp.Po
++testsuite/smokey/posix-clock/libposix_clock_a-posix-clock.o
++testsuite/smokey/posix-clock/libposix-clock.a
++testsuite/smokey/posix-clock/.deps/libposix_clock_a-posix-clock.Po
++testsuite/smokey/posix-cond/libposix_cond_a-posix-cond.o
++testsuite/smokey/posix-cond/libposix-cond.a
++testsuite/smokey/posix-cond/.deps/libposix_cond_a-posix-cond.Po
++testsuite/smokey/posix-fork/libposix_fork_a-posix-fork.o
++testsuite/smokey/posix-fork/libposix-fork.a
++testsuite/smokey/posix-fork/.deps/libposix_fork_a-posix-fork.Po
++testsuite/smokey/posix-mutex/libposix_mutex_a-posix-mutex.o
++testsuite/smokey/posix-mutex/libposix-mutex.a
++testsuite/smokey/posix-mutex/.deps/libposix_mutex_a-posix-mutex.Po
++testsuite/smokey/posix-select/libposix_select_a-posix-select.o
++testsuite/smokey/posix-select/libposix-select.a
++testsuite/smokey/posix-select/.deps/libposix_select_a-posix-select.Po
++testsuite/smokey/rtdm/librtdm_a-rtdm.o
++testsuite/smokey/rtdm/librtdm.a
++testsuite/smokey/rtdm/.deps/librtdm_a-rtdm.Po
++testsuite/smokey/sched-quota/libsched_quota_a-sched-quota.o
++testsuite/smokey/sched-quota/libsched-quota.a
++testsuite/smokey/sched-quota/.deps/libsched_quota_a-sched-quota.Po
++testsuite/smokey/sched-tp/libsched_tp_a-sched-tp.o
++testsuite/smokey/sched-tp/libsched-tp.a
++testsuite/smokey/sched-tp/.deps/libsched_tp_a-sched-tp.Po
++testsuite/smokey/setsched/libsetsched_a-setsched.o
++testsuite/smokey/setsched/libsetsched.a
++testsuite/smokey/setsched/.deps/libsetsched_a-setsched.Po
++testsuite/smokey/sigdebug/libsigdebug_a-sigdebug.o
++testsuite/smokey/sigdebug/libsigdebug.a
++testsuite/smokey/sigdebug/.deps/libsigdebug_a-sigdebug.Po
++testsuite/smokey/timerfd/libtimerfd_a-timerfd.o
++testsuite/smokey/timerfd/libtimerfd.a
++testsuite/smokey/timerfd/.deps/libtimerfd_a-timerfd.Po
++testsuite/smokey/tsc/libtsc_a-tsc.o
++testsuite/smokey/tsc/libtsc.a
++testsuite/smokey/tsc/.deps/libtsc_a-tsc.Po
++testsuite/smokey/vdso-access/libvdso_access_a-vdso-access.o
++testsuite/smokey/vdso-access/libvdso-access.a
++testsuite/smokey/vdso-access/.deps/libvdso_access_a-vdso-access.Po
++testsuite/smokey/xddp/libxddp_a-xddp.o
++testsuite/smokey/xddp/libxddp.a
++testsuite/smokey/xddp/.deps/libxddp_a-xddp.Po
++testsuite/spitest/spitest
++testsuite/spitest/spitest-spitest.o
++testsuite/spitest/.deps/spitest-spitest.Po
++testsuite/spitest/.libs/spitest
++testsuite/switchtest/switchtest
++testsuite/switchtest/switchtest-switchtest.o
++testsuite/switchtest/.deps/switchtest-switchtest.Po
++testsuite/switchtest/.libs/switchtest
++testsuite/xeno-test/xeno_test_run-xeno-test-run.o
++testsuite/xeno-test/xeno-test
++testsuite/xeno-test/xeno-test-run
++testsuite/xeno-test/.deps/xeno_test_run-xeno-test-run.Po
++utils/analogy/analogy_calibrate
++utils/analogy/analogy_calibrate.o
++utils/analogy/analogy_config
++utils/analogy/analogy_config.o
++utils/analogy/calibration_ni_m.o
++utils/analogy/cmd_bits
++utils/analogy/cmd_bits.o
++utils/analogy/cmd_read
++utils/analogy/cmd_read.o
++utils/analogy/cmd_write
++utils/analogy/cmd_write.o
++utils/analogy/insn_bits
++utils/analogy/insn_bits.o
++utils/analogy/insn_read
++utils/analogy/insn_read.o
++utils/analogy/insn_write
++utils/analogy/insn_write.o
++utils/analogy/libwaveform.la
++utils/analogy/wf_facilities.lo
++utils/analogy/wf_facilities.o
++utils/analogy/wf_generate
++utils/analogy/wf_generate.o
++utils/analogy/.deps/analogy_calibrate.Po
++utils/analogy/.deps/analogy_config.Po
++utils/analogy/.deps/calibration_ni_m.Po
++utils/analogy/.deps/cmd_bits.Po
++utils/analogy/.deps/cmd_read.Po
++utils/analogy/.deps/cmd_write.Po
++utils/analogy/.deps/insn_bits.Po
++utils/analogy/.deps/insn_read.Po
++utils/analogy/.deps/insn_write.Po
++utils/analogy/.deps/wf_facilities.Plo
++utils/analogy/.deps/wf_generate.Po
++utils/analogy/.libs/analogy_calibrate
++utils/analogy/.libs/analogy_config
++utils/analogy/.libs/cmd_bits
++utils/analogy/.libs/cmd_read
++utils/analogy/.libs/cmd_write
++utils/analogy/.libs/insn_bits
++utils/analogy/.libs/insn_read
++utils/analogy/.libs/insn_write
++utils/analogy/.libs/libwaveform.a
++utils/analogy/.libs/libwaveform.la
++utils/analogy/.libs/wf_facilities.o
++utils/analogy/.libs/wf_generate
++utils/autotune/autotune
++utils/autotune/autotune-autotune.o
++utils/autotune/.deps/autotune-autotune.Po
++utils/autotune/.libs/autotune
++utils/can/rtcanconfig
++utils/can/rtcanconfig.o
++utils/can/rtcanrecv
++utils/can/rtcanrecv.o
++utils/can/rtcansend
++utils/can/rtcansend.o
++utils/can/.deps/rtcanconfig.Po
++utils/can/.deps/rtcanrecv.Po
++utils/can/.deps/rtcansend.Po
++utils/can/.libs/rtcanconfig
++utils/can/.libs/rtcanrecv
++utils/can/.libs/rtcansend
++utils/corectl/corectl
++utils/corectl/corectl-corectl.o
++utils/corectl/.deps/corectl-corectl.Po
++utils/corectl/.libs/corectl
++utils/hdb/hdb
++utils/hdb/hdb-hdb.o
++utils/hdb/.deps/hdb-hdb.Po
++utils/hdb/.libs/hdb
++utils/net/nomaccfg
++utils/net/nomaccfg.o
++utils/net/rtcfg
++utils/net/rtcfg.o
++utils/net/rtifconfig
++utils/net/rtifconfig.o
++utils/net/rtiwconfig
++utils/net/rtiwconfig.o
++utils/net/rtnet
++utils/net/rtnet.conf
++utils/net/rtping
++utils/net/rtping.o
++utils/net/rtroute
++utils/net/rtroute.o
++utils/net/tdmacfg
++utils/net/tdmacfg.o
++utils/net/.deps/nomaccfg.Po
++utils/net/.deps/rtcfg.Po
++utils/net/.deps/rtifconfig.Po
++utils/net/.deps/rtiwconfig.Po
++utils/net/.deps/rtping.Po
++utils/net/.deps/rtroute.Po
++utils/net/.deps/tdmacfg.Po
++utils/ps/rtps
++utils/ps/rtps.o
++utils/ps/.deps/rtps.Po
++utils/slackspot/slackspot
++utils/slackspot/slackspot.o
++utils/slackspot/.deps/slackspot.Po
+-- 
+2.17.1
+
+
+From b4542c998b245000bb940e7a7244381dc86a928c Mon Sep 17 00:00:00 2001
+From: Souchu Bastien <bsouchu@gmail.com>
+Date: Wed, 17 Mar 2021 11:10:35 +0100
+Subject: [PATCH 2/8] =?UTF-8?q?=C3=A7a=20compile,=20le=20d=C3=A9but=20est?=
+ =?UTF-8?q?=20fait?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .vscode/settings.json               |   5 ++
+ include/alchemy/task.h              |  11 +++
+ include/cobalt/uapi/sched.h         |   5 ++
+ include/mercury/boilerplate/sched.h |   5 ++
+ kernel/cobalt/posix/sched.c         |   6 ++
+ lib/alchemy/task.c                  | 129 +++++++++++++++++++++++++++-
+ lib/cobalt/attr.c                   |   3 +
+ lib/cobalt/thread.c                 |   1 +
+ lib/copperplate/internal.c          |   2 +
+ 9 files changed, 166 insertions(+), 1 deletion(-)
+ create mode 100644 .vscode/settings.json
+
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+new file mode 100644
+index 000000000..24e51c51b
+--- /dev/null
++++ b/.vscode/settings.json
+@@ -0,0 +1,5 @@
++{
++    "files.associations": {
++        "sched.h": "c"
++    }
++}
+\ No newline at end of file
+diff --git a/include/alchemy/task.h b/include/alchemy/task.h
+index 685d478aa..b0fbeaac0 100644
+--- a/include/alchemy/task.h
++++ b/include/alchemy/task.h
+@@ -101,6 +101,12 @@ CURRENT_DECL(int, rt_task_create(RT_TASK *task,
+ 				 int prio,
+ 				 int mode));
+ 
++CURRENT_DECL(int, rt_task_create_dyna(RT_TASK *task,
++				 const char *name,
++				 int stksize,
++				 xnticks_t next_deadline,
++				 int mode));
++
+ int rt_task_delete(RT_TASK *task);
+ 
+ int rt_task_set_affinity(RT_TASK *task,
+@@ -115,6 +121,11 @@ CURRENT_DECL(int, rt_task_spawn(RT_TASK *task, const char *name,
+ 				void (*entry)(void *arg),
+ 				void *arg));
+ 
++CURRENT_DECL(int, rt_task_spawn_dyna(RT_TASK *task, const char *name,
++				int stksize, xnticks_t next_deadline, int mode,
++				void (*entry)(void *arg),
++				void *arg));
++
+ int rt_task_shadow(RT_TASK *task,
+ 		   const char *name,
+ 		   int prio,
+diff --git a/include/cobalt/uapi/sched.h b/include/cobalt/uapi/sched.h
+index b672095c3..578a00f08 100644
+--- a/include/cobalt/uapi/sched.h
++++ b/include/cobalt/uapi/sched.h
+@@ -15,6 +15,7 @@
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+  */
++#include "/usr/include/asm-generic/int-ll64.h"
+ #ifndef _COBALT_UAPI_SCHED_H
+ #define _COBALT_UAPI_SCHED_H
+ 
+@@ -89,6 +90,9 @@ enum {
+ 	sched_quota_set,
+ 	sched_quota_get,
+ };
++struct __sched_deadline_param {
++	__u64 sched_deadline;
++};
+ 
+ struct __sched_config_quota {
+ 	int op;
+@@ -125,6 +129,7 @@ struct sched_param_ex {
+ 		struct __sched_rr_param rr;
+ 		struct __sched_tp_param tp;
+ 		struct __sched_quota_param quota;
++		struct __sched_deadline_param deadline;
+ 	} sched_u;
+ };
+ 
+diff --git a/include/mercury/boilerplate/sched.h b/include/mercury/boilerplate/sched.h
+index 30dde60b7..adeb795fc 100644
+--- a/include/mercury/boilerplate/sched.h
++++ b/include/mercury/boilerplate/sched.h
+@@ -25,10 +25,15 @@ struct __sched_rr_param {
+ 	struct timespec __sched_rr_quantum;
+ };
+ 
++struct __sched_deadline_param {
++	__u64 sched_deadline;
++};
++
+ struct sched_param_ex {
+ 	int sched_priority;
+ 	union {
+ 		struct __sched_rr_param rr;
++		struct __sched_deadline_param deadline;
+ 	} sched_u;
+ };
+ 
+diff --git a/kernel/cobalt/posix/sched.c b/kernel/cobalt/posix/sched.c
+index 798a172d7..1132632ce 100644
+--- a/kernel/cobalt/posix/sched.c
++++ b/kernel/cobalt/posix/sched.c
+@@ -29,9 +29,11 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ {
+ 	struct xnsched_class *sched_class;
+ 	int prio, policy;
++	xnticks_t deadline;
+ 	xnticks_t tslice;
+ 
+ 	prio = param_ex->sched_priority;
++	deadline = param_ex->sched_u.deadline.sched_deadline;
+ 	tslice = XN_INFINITE;
+ 	policy = u_policy;
+ 
+@@ -87,6 +89,10 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 		    prio > XNSCHED_CORE_MAX_PRIO)
+ 			return NULL;
+ 		break;
++	case SCHED_DEADLINE:
++		if(deadline < rt_timer_read())
++			return NULL;
++		break;
+ #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+ 	case SCHED_SPORADIC:
+ 		param->pss.normal_prio = param_ex->sched_priority;
+diff --git a/lib/alchemy/task.c b/lib/alchemy/task.c
+index 949a996d0..0bef70909 100644
+--- a/lib/alchemy/task.c
++++ b/lib/alchemy/task.c
+@@ -327,6 +327,84 @@ fail_syncinit:
+ 	return ret;
+ }
+ 
++static int create_tcb_dyna(struct alchemy_task **tcbp, RT_TASK *task,
++		      const char *name, xnticks_t next_deadline, int mode)
++{
++	struct threadobj_init_data idata;
++	struct alchemy_task *tcb;
++	int ret;
++
++	if (threadobj_irq_p())
++		return -EPERM;
++
++	tcb = threadobj_alloc(struct alchemy_task, thobj,
++			      union alchemy_wait_union);
++	if (tcb == NULL)
++		return -ENOMEM;
++
++	generate_name(tcb->name, name, &task_namegen);
++
++	tcb->mode = mode;
++	tcb->entry = NULL;	/* Not yet known. */
++	tcb->arg = NULL;
++
++	CPU_ZERO(&tcb->affinity);
++
++	ret = syncobj_init(&tcb->sobj_msg, CLOCK_COPPERPLATE,
++			   SYNCOBJ_PRIO, fnref_null);
++	if (ret)
++		goto fail_syncinit;
++
++	tcb->suspends = 0;
++	tcb->flowgen = 0;
++
++	idata.magic = task_magic;
++	idata.finalizer = task_finalizer;
++	idata.policy = next_deadline ? SCHED_DEADLINE : SCHED_OTHER;
++	idata.param_ex.sched_u.deadline.sched_deadline = next_deadline;
++	//TODO BASTIEN vérifier qu'il n'y a pas de problème ici
++	ret = threadobj_init(&tcb->thobj, &idata);
++	if (ret)
++		goto fail_threadinit;
++
++	*tcbp = tcb;
++
++	/*
++	 * CAUTION: The task control block must be fully built before
++	 * we publish it through syncluster_addobj(), at which point
++	 * it could be referred to immediately from another task as we
++	 * got preempted. In addition, the task descriptor must be
++	 * updated prior to starting the task.
++	 */
++	tcb->self.handle = mainheap_ref(tcb, uintptr_t);
++
++	registry_init_file_obstack(&tcb->fsobj, &registry_ops);
++	ret = __bt(registry_add_file(&tcb->fsobj, O_RDONLY,
++				     "/alchemy/tasks/%s", tcb->name));
++	if (ret)
++		warning("failed to export task %s to registry, %s",
++			tcb->name, symerror(ret));
++
++	ret = syncluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj);
++	if (ret)
++		goto fail_register;
++
++	if (task)
++		task->handle = tcb->self.handle;
++
++	return 0;
++
++fail_register:
++	registry_destroy_file(&tcb->fsobj);
++	threadobj_uninit(&tcb->thobj);
++fail_threadinit:
++	syncobj_uninit(&tcb->sobj_msg);
++fail_syncinit:
++	threadobj_free(&tcb->thobj);
++
++	return ret;
++}
++
+ /**
+  * @fn int rt_task_create(RT_TASK *task, const char *name, int stksize, int prio, int mode)
+  * @brief Create a task with Alchemy personality.
+@@ -408,6 +486,7 @@ fail_syncinit:
+  * @note Tasks can be referred to from multiple processes which all
+  * belong to the same Xenomai session.
+  */
++//Tache principale dans le main
+ #ifndef DOXYGEN_CPP
+ CURRENT_IMPL(int, rt_task_create, (RT_TASK *task, const char *name,
+ 				   int stksize, int prio, int mode))
+@@ -425,7 +504,7 @@ int rt_task_create(RT_TASK *task, const char *name,
+ 		return -EINVAL;
+ 
+ 	CANCEL_DEFER(svc);
+-
++	//Ici on créer la tâche alchemy
+ 	ret = create_tcb(&tcb, task, name, prio, mode);
+ 	if (ret)
+ 		goto out;
+@@ -455,6 +534,54 @@ out:
+ 	return ret;
+ }
+ 
++
++#ifndef DOXYGEN_CPP
++CURRENT_IMPL(int, rt_task_create_dyna, (RT_TASK *task, const char *name,
++				   int stksize, xnticks_t next_deadline, int mode))
++#else
++int rt_task_create_dyna(RT_TASK *task, const char *name,
++		   int stksize, xnticks_t next_deadline, int mode)
++#endif
++{
++	struct corethread_attributes cta;
++	struct alchemy_task *tcb;
++	struct service svc;
++	int ret;
++
++	if (mode & ~(T_LOCK | T_WARNSW | T_JOINABLE))
++		return -EINVAL;
++
++	CANCEL_DEFER(svc);
++	//Ici on créer la tâche alchemy
++	ret = create_tcb_dyna(&tcb, task, name, next_deadline, mode);
++	if (ret)
++		goto out;
++
++	/* We want this to be set prior to spawning the thread. */
++	tcb->self = *task;
++
++	cta.detachstate = mode & T_JOINABLE ?
++		PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
++	cta.policy = threadobj_get_policy(&tcb->thobj);
++	threadobj_copy_schedparam(&cta.param_ex, &tcb->thobj);
++	cta.prologue = task_prologue_1;
++	cta.run = task_entry;
++	cta.arg = tcb;
++	cta.stacksize = stksize;
++
++	ret = __bt(copperplate_create_thread(&cta, &tcb->thobj.ptid));
++	if (ret) {
++		delete_tcb(tcb);
++	} else {
++		tcb->self.thread = tcb->thobj.ptid;
++		task->thread = tcb->thobj.ptid;
++	}
++out:
++	CANCEL_RESTORE(svc);
++
++	return ret;
++}
++
+ /**
+  * @fn int rt_task_delete(RT_TASK *task)
+  * @brief Delete a real-time task.
+diff --git a/lib/cobalt/attr.c b/lib/cobalt/attr.c
+index 586de928b..8916e7f15 100644
+--- a/lib/cobalt/attr.c
++++ b/lib/cobalt/attr.c
+@@ -39,9 +39,12 @@ int pthread_attr_init_ex(pthread_attr_ex_t *attr_ex)
+ 	/* Merge in the default standard attribute set. */
+ 	__COBALT(pthread_attr_init)(&attr_ex->std);
+ 	pthread_attr_getschedpolicy(&attr_ex->std, &policy);
++	printf("policy in attr.c : %d\n", policy);
+ 	attr_ex->nonstd.sched_policy = policy;
+ 	pthread_attr_getschedparam(&attr_ex->std, &param);
++	//TODO BASTIEN probleme ici
+ 	attr_ex->nonstd.sched_param.sched_priority = param.sched_priority;
++	//attr_ex->nonstd.sched_param.sched_u.deadline.sched_deadline = 
+ 
+ 	return 0;
+ }
+diff --git a/lib/cobalt/thread.c b/lib/cobalt/thread.c
+index bb23cdcb9..725a3719e 100644
+--- a/lib/cobalt/thread.c
++++ b/lib/cobalt/thread.c
+@@ -767,6 +767,7 @@ COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
+  *
+  * @apitags{thread-unrestricted}
+  */
++//TODO BASTIEN verifier ici , difficile de comprendre
+ int pthread_getschedparam_ex(pthread_t thread,
+ 			     int *__restrict__ policy_r,
+ 			     struct sched_param_ex *__restrict__ param_ex)
+diff --git a/lib/copperplate/internal.c b/lib/copperplate/internal.c
+index 1d965266b..2c08ac277 100644
+--- a/lib/copperplate/internal.c
++++ b/lib/copperplate/internal.c
+@@ -60,6 +60,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
+ 	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_INHERIT_SCHED);
+ 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
+ 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
++	//TODO BASTIEN trouver un moyen de faire passer la deadline proprement
++	attr_ex.nonstd.sched_param.sched_u.deadline.sched_deadline = cta->param_ex.sched_u.deadline.sched_deadline;
+ 	ret = -pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta);
+ 	pthread_attr_destroy_ex(&attr_ex);
+ 	if (ret)
+-- 
+2.17.1
+
+
+From b43d37ee94f864f97ae9f4232020d8104ce3bb52 Mon Sep 17 00:00:00 2001
+From: Souchu Bastien <bsouchu@gmail.com>
+Date: Wed, 17 Mar 2021 11:55:41 +0100
+Subject: [PATCH 3/8] beaucoup de commentaire
+
+---
+ .vscode/settings.json              |   4 +-
+ include/cobalt/kernel/schedparam.h |   1 +
+ include/cobalt/kernel/thread.h     |   6 +
+ kernel/cobalt/posix/sched.c        |  13 +-
+ kernel/cobalt/posix/thread.c       |   2 +
+ kernel/cobalt/sched-dyna.c         | 257 +++++++++++++++++++++++++++++
+ kernel/cobalt/sched.c              |   4 +
+ kernel/cobalt/thread.c             |   4 +
+ lib/cobalt/thread.c                |   3 +
+ 9 files changed, 290 insertions(+), 4 deletions(-)
+ create mode 100644 kernel/cobalt/sched-dyna.c
+
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+index 24e51c51b..4289f95ef 100644
+--- a/.vscode/settings.json
++++ b/.vscode/settings.json
+@@ -1,5 +1,7 @@
+ {
+     "files.associations": {
+-        "sched.h": "c"
++        "sched.h": "c",
++        "kernel.h": "c",
++        "sysinfo.h": "c"
+     }
+ }
+\ No newline at end of file
+diff --git a/include/cobalt/kernel/schedparam.h b/include/cobalt/kernel/schedparam.h
+index 9da95aa0d..f772a920d 100644
+--- a/include/cobalt/kernel/schedparam.h
++++ b/include/cobalt/kernel/schedparam.h
+@@ -34,6 +34,7 @@ struct xnsched_weak_param {
+ 
+ struct xnsched_rt_param {
+ 	int prio;
++	xnticks_t deadline;
+ };
+ 
+ struct xnsched_tp_param {
+diff --git a/include/cobalt/kernel/thread.h b/include/cobalt/kernel/thread.h
+index fe7390088..701be199f 100644
+--- a/include/cobalt/kernel/thread.h
++++ b/include/cobalt/kernel/thread.h
+@@ -122,6 +122,12 @@ struct xnthread {
+ 	 */
+ 	int wprio;
+ 
++	/**
++	 * The next deadline, usefull only in EDF scheduling 
++	 */
++
++	xnticks_t next_deadline;
++
+ 	int lock_count;	/** Scheduler lock count. */
+ 
+ 	/**
+diff --git a/kernel/cobalt/posix/sched.c b/kernel/cobalt/posix/sched.c
+index 1132632ce..1da4853f2 100644
+--- a/kernel/cobalt/posix/sched.c
++++ b/kernel/cobalt/posix/sched.c
+@@ -46,8 +46,16 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 		prio = -prio;
+ 		policy = SCHED_WEAK;
+ 	}
+-	sched_class = &xnsched_class_rt;
++	//TODO BASTIEN vérifier que tout marche bien
++	if(deadline){
++		sched_class = &xnsched_class_dyna;
++	} else {
++		sched_class = &xnsched_class_rt;
++	}
+ 	param->rt.prio = prio;
++	param->rt.deadline = deadline;
++
++	//TODO BASTIEN toujours des doutes sur la policy. Il va falloir trouver un moyen de print
+ 
+ 	switch (policy) {
+ 	case SCHED_NORMAL:
+@@ -90,8 +98,7 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 			return NULL;
+ 		break;
+ 	case SCHED_DEADLINE:
+-		if(deadline < rt_timer_read())
+-			return NULL;
++		//TODO BASTIEN vérifier que la deadline est dans le futur
+ 		break;
+ #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+ 	case SCHED_SPORADIC:
+diff --git a/kernel/cobalt/posix/thread.c b/kernel/cobalt/posix/thread.c
+index bf9c08212..2ed08412d 100644
+--- a/kernel/cobalt/posix/thread.c
++++ b/kernel/cobalt/posix/thread.c
+@@ -22,6 +22,7 @@
+ #include <linux/signal.h>
+ #include <linux/jiffies.h>
+ #include <linux/err.h>
++#include <linux/kernel.h>
+ #include "internal.h"
+ #include "thread.h"
+ #include "sched.h"
+@@ -363,6 +364,7 @@ static int pthread_create(struct cobalt_thread **thread_p,
+ 		return -EAGAIN;
+ 
+ 	tslice = cobalt_time_slice;
++	//TODO BASTIEN on établit la classe du scheduler en fonction de param_ex et surtout de policy
+ 	sched_class = cobalt_sched_policy_param(&param, policy,
+ 						param_ex, &tslice);
+ 	if (sched_class == NULL) {
+diff --git a/kernel/cobalt/sched-dyna.c b/kernel/cobalt/sched-dyna.c
+new file mode 100644
+index 000000000..ed5587f01
+--- /dev/null
++++ b/kernel/cobalt/sched-dyna.c
+@@ -0,0 +1,257 @@
++/*
++ * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
++ *
++ * Xenomai is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published
++ * by the Free Software Foundation; either version 2 of the License,
++ * or (at your option) any later version.
++ *
++ * Xenomai is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with Xenomai; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
++ * 02111-1307, USA.
++ */
++#include <cobalt/kernel/sched.h>
++
++static void xnsched_rt_init(struct xnsched *sched)
++{
++	xnsched_initq(&sched->rt.runnable);
++}
++
++static void xnsched_rt_requeue(struct xnthread *thread)
++{
++	/*
++	 * Put back at same place: i.e. requeue to head of current
++	 * priority group (i.e. LIFO, used for preemption handling).
++	 */
++	__xnsched_rt_requeue(thread);
++}
++
++static void xnsched_rt_enqueue(struct xnthread *thread)
++{
++	/*
++	 * Enqueue for next pick: i.e. move to end of current priority
++	 * group (i.e. FIFO).
++	 */
++	__xnsched_rt_enqueue(thread);
++}
++
++static void xnsched_rt_dequeue(struct xnthread *thread)
++{
++	/*
++	 * Pull from the runnable thread queue.
++	 */
++	__xnsched_rt_dequeue(thread);
++}
++
++static void xnsched_rt_rotate(struct xnsched *sched,
++			      const union xnsched_policy_param *p)
++{
++	struct xnthread *thread, *curr;
++
++	if (xnsched_emptyq_p(&sched->rt.runnable))
++		return;	/* No runnable thread in this class. */
++
++	curr = sched->curr;
++
++	if (p->rt.prio == XNSCHED_RUNPRIO)
++		thread = curr;
++	else {
++		thread = xnsched_findq(&sched->rt.runnable, p->rt.prio);
++		if (thread == NULL)
++			return;
++	}
++
++	/*
++	 * In case we picked the current thread, we have to make sure
++	 * not to move it back to the run queue if it was blocked
++	 * before we were called. The same goes if the current thread
++	 * holds the scheduler lock.
++	 */
++	if (thread != curr ||
++	    (!xnthread_test_state(curr, XNTHREAD_BLOCK_BITS) &&
++	     curr->lock_count == 0))
++		xnsched_putback(thread);
++}
++
++void xnsched_rt_tick(struct xnsched *sched)
++{
++	/*
++	 * The round-robin time credit is only consumed by a running
++	 * thread that neither holds the scheduler lock nor was
++	 * blocked before entering this callback. As the time slice is
++	 * exhausted for the running thread, move it back to the
++	 * run queue at the end of its priority group.
++	 */
++	xnsched_putback(sched->curr);
++}
++
++static bool xnsched_rt_setparam(struct xnthread *thread,
++				const union xnsched_policy_param *p)
++{
++	return __xnsched_rt_setparam(thread, p);
++}
++
++static void xnsched_rt_getparam(struct xnthread *thread,
++				union xnsched_policy_param *p)
++{
++	__xnsched_rt_getparam(thread, p);
++}
++
++static void xnsched_rt_trackprio(struct xnthread *thread,
++				 const union xnsched_policy_param *p)
++{
++	__xnsched_rt_trackprio(thread, p);
++}
++
++static void xnsched_rt_protectprio(struct xnthread *thread, int prio)
++{
++	__xnsched_rt_protectprio(thread, prio);
++}
++
++#ifdef CONFIG_XENO_OPT_VFILE
++
++struct xnvfile_directory sched_rt_vfroot;
++
++struct vfile_sched_rt_priv {
++	struct xnthread *curr;
++};
++
++struct vfile_sched_rt_data {
++	int cpu;
++	pid_t pid;
++	char name[XNOBJECT_NAME_LEN];
++	xnticks_t period;
++	int cprio;
++};
++
++static struct xnvfile_snapshot_ops vfile_sched_rt_ops;
++
++static struct xnvfile_snapshot vfile_sched_rt = {
++	.privsz = sizeof(struct vfile_sched_rt_priv),
++	.datasz = sizeof(struct vfile_sched_rt_data),
++	.tag = &nkthreadlist_tag,
++	.ops = &vfile_sched_rt_ops,
++};
++
++static int vfile_sched_rt_rewind(struct xnvfile_snapshot_iterator *it)
++{
++	struct vfile_sched_rt_priv *priv = xnvfile_iterator_priv(it);
++	int nrthreads = xnsched_class_rt.nthreads;
++
++	if (nrthreads == 0)
++		return -ESRCH;
++
++	priv->curr = list_first_entry(&nkthreadq, struct xnthread, glink);
++
++	return nrthreads;
++}
++
++static int vfile_sched_rt_next(struct xnvfile_snapshot_iterator *it,
++			       void *data)
++{
++	struct vfile_sched_rt_priv *priv = xnvfile_iterator_priv(it);
++	struct vfile_sched_rt_data *p = data;
++	struct xnthread *thread;
++
++	if (priv->curr == NULL)
++		return 0;	/* All done. */
++
++	thread = priv->curr;
++	if (list_is_last(&thread->glink, &nkthreadq))
++		priv->curr = NULL;
++	else
++		priv->curr = list_next_entry(thread, glink);
++
++	if (thread->base_class != &xnsched_class_rt ||
++	    xnthread_test_state(thread, XNWEAK))
++		return VFILE_SEQ_SKIP;
++
++	p->cpu = xnsched_cpu(thread->sched);
++	p->pid = xnthread_host_pid(thread);
++	memcpy(p->name, thread->name, sizeof(p->name));
++	p->cprio = thread->cprio;
++	p->period = xnthread_get_period(thread);
++
++	return 1;
++}
++
++static int vfile_sched_rt_show(struct xnvfile_snapshot_iterator *it,
++			       void *data)
++{
++	struct vfile_sched_rt_data *p = data;
++	char pribuf[16], ptbuf[16];
++
++	if (p == NULL)
++		xnvfile_printf(it, "%-3s  %-6s %-8s %-10s %s\n",
++			       "CPU", "PID", "PRI", "PERIOD", "NAME");
++	else {
++		ksformat(pribuf, sizeof(pribuf), "%3d", p->cprio);
++		xntimer_format_time(p->period, ptbuf, sizeof(ptbuf));
++		xnvfile_printf(it, "%3u  %-6d %-8s %-10s %s\n",
++			       p->cpu,
++			       p->pid,
++			       pribuf,
++			       ptbuf,
++			       p->name);
++	}
++
++	return 0;
++}
++
++static struct xnvfile_snapshot_ops vfile_sched_rt_ops = {
++	.rewind = vfile_sched_rt_rewind,
++	.next = vfile_sched_rt_next,
++	.show = vfile_sched_rt_show,
++};
++
++static int xnsched_rt_init_vfile(struct xnsched_class *schedclass,
++				 struct xnvfile_directory *vfroot)
++{
++	int ret;
++
++	ret = xnvfile_init_dir(schedclass->name, &sched_rt_vfroot, vfroot);
++	if (ret)
++		return ret;
++
++	return xnvfile_init_snapshot("threads", &vfile_sched_rt,
++				     &sched_rt_vfroot);
++}
++
++static void xnsched_rt_cleanup_vfile(struct xnsched_class *schedclass)
++{
++	xnvfile_destroy_snapshot(&vfile_sched_rt);
++	xnvfile_destroy_dir(&sched_rt_vfroot);
++}
++
++#endif /* CONFIG_XENO_OPT_VFILE */
++
++struct xnsched_class xnsched_class_dyna = {
++	.sched_init		=	xnsched_rt_init,
++	.sched_enqueue		=	xnsched_rt_enqueue,
++	.sched_dequeue		=	xnsched_rt_dequeue,
++	.sched_requeue		=	xnsched_rt_requeue,
++	.sched_pick		=	xnsched_rt_pick,
++	.sched_tick		=	xnsched_rt_tick,
++	.sched_rotate		=	xnsched_rt_rotate,
++	.sched_forget		=	NULL,
++	.sched_kick		=	NULL,
++	.sched_declare		=	NULL,
++	.sched_setparam		=	xnsched_rt_setparam,
++	.sched_trackprio	=	xnsched_rt_trackprio,
++	.sched_protectprio	=	xnsched_rt_protectprio,
++	.sched_getparam		=	xnsched_rt_getparam,
++#ifdef CONFIG_XENO_OPT_VFILE
++	.sched_init_vfile	=	xnsched_rt_init_vfile,
++	.sched_cleanup_vfile	=	xnsched_rt_cleanup_vfile,
++#endif
++	.weight			=	XNSCHED_CLASS_WEIGHT(4),
++	.policy			=	SCHED_FIFO,
++	.name			=	"rt"
++};
++EXPORT_SYMBOL_GPL(xnsched_class_dyna);
+diff --git a/kernel/cobalt/sched.c b/kernel/cobalt/sched.c
+index 7873fd652..943574fb2 100644
+--- a/kernel/cobalt/sched.c
++++ b/kernel/cobalt/sched.c
+@@ -405,6 +405,7 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	bool effective;
+ 	int ret;
+ 
++	//TODO BASTIEN bien penser à faire in checkparam pour la sched class dynamique
+ 	ret = xnsched_chkparam(sched_class, thread, p);
+ 	if (ret)
+ 		return ret;
+@@ -417,6 +418,7 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	 * affect the previous class (such as touching thread->rlink
+ 	 * for instance).
+ 	 */
++	//TODO BASTIEN à priori rien à faire ici
+ 	if (sched_class != thread->base_class) {
+ 		ret = xnsched_declare(sched_class, thread, p);
+ 		if (ret)
+@@ -455,6 +457,7 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	 * This is the ONLY place where calling xnsched_setparam() is
+ 	 * legit, sane and safe.
+ 	 */
++	//TODO BASTIEN changements à faire ici impérativement
+ 	effective = xnsched_setparam(thread, p);
+ 	if (effective) {
+ 		thread->sched_class = sched_class;
+@@ -462,6 +465,7 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	} else if (XENO_DEBUG(COBALT))
+ 		thread->sched_class = orig_effective_class;
+ 
++	//TODO BASTIEN à priori, si l'on arrive à faire tout les changements avant, rien à faire ici et cela devrait fonctionner
+ 	if (xnthread_test_state(thread, XNREADY))
+ 		xnsched_enqueue(thread);
+ 
+diff --git a/kernel/cobalt/thread.c b/kernel/cobalt/thread.c
+index d3a827eaa..c7f6129bc 100644
+--- a/kernel/cobalt/thread.c
++++ b/kernel/cobalt/thread.c
+@@ -186,6 +186,8 @@ int __xnthread_init(struct xnthread *thread,
+ 	thread->wprio = XNSCHED_IDLE_PRIO;
+ 	thread->cprio = XNSCHED_IDLE_PRIO;
+ 	thread->bprio = XNSCHED_IDLE_PRIO;
++	//TODO BASTIEN prévoir une valeur ici
++	thread->next_deadline = 0;
+ 	thread->lock_count = 0;
+ 	thread->rrperiod = XN_INFINITE;
+ 	thread->wchan = NULL;
+@@ -218,6 +220,7 @@ int __xnthread_init(struct xnthread *thread,
+ 	if (ret)
+ 		goto err_out;
+ 
++	//TODO BASTIEN probablement des changements uniquement ici
+ 	ret = xnsched_set_policy(thread, sched_class, sched_param);
+ 	if (ret)
+ 		goto err_out;
+@@ -553,6 +556,7 @@ int xnthread_init(struct xnthread *thread,
+ 
+ 	sched = xnsched_struct(cpumask_first(&affinity));
+ 
++	//TODO BASTIEN à priori les seuls changements sont à faire ici
+ 	ret = __xnthread_init(thread, attr, sched, sched_class, sched_param);
+ 	if (ret)
+ 		return ret;
+diff --git a/lib/cobalt/thread.c b/lib/cobalt/thread.c
+index 725a3719e..427ad91dc 100644
+--- a/lib/cobalt/thread.c
++++ b/lib/cobalt/thread.c
+@@ -141,6 +141,7 @@ int pthread_create_ex(pthread_t *ptid_r,
+ 	if (attr_ex == NULL)
+ 		attr_ex = &default_attr_ex;
+ 
++	//TODO BASTIEN vérifier
+ 	pthread_getschedparam_ex(pthread_self(), &iargs.policy, &iargs.param_ex);
+ 	iargs.parent_prio = iargs.param_ex.sched_priority;
+ 	memcpy(&attr, &attr_ex->std, sizeof(attr));
+@@ -149,6 +150,8 @@ int pthread_create_ex(pthread_t *ptid_r,
+ 	if (inherit == PTHREAD_EXPLICIT_SCHED) {
+ 		pthread_attr_getschedpolicy_ex(attr_ex, &iargs.policy);
+ 		pthread_attr_getschedparam_ex(attr_ex, &iargs.param_ex);
++		//TODO BASTIEN si l'on passe toujours par là, pas de problème
++		printf("inherit == PTHREAD_EXPLICIT_SCHED");
+ 	}
+ 
+ 	if (linuxthreads && geteuid()) {
+-- 
+2.17.1
+
+
+From dee2630a07b594c5dd33632791ec76ecc5a79196 Mon Sep 17 00:00:00 2001
+From: Souchu Bastien <bsouchu@gmail.com>
+Date: Tue, 6 Apr 2021 10:53:20 +0200
+Subject: [PATCH 4/8] =?UTF-8?q?premi=C3=A8re=20version=20modulaire?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .vscode/settings.json              |   5 +-
+ include/cobalt/kernel/list.h       |   6 ++
+ include/cobalt/kernel/sched-dyna.h | 118 +++++++++++++++++++++++++++++
+ include/cobalt/kernel/sched-rt.h   |   5 --
+ include/cobalt/kernel/sched.h      |  29 ++++++-
+ include/cobalt/kernel/schedqueue.h |   6 +-
+ kernel/cobalt/posix/sched.c        |   8 +-
+ kernel/cobalt/sched-dyna.c         |  50 ++++++------
+ kernel/cobalt/thread.c             |   1 -
+ lib/alchemy/task.c                 |   9 ++-
+ lib/cobalt/thread.c                |   2 -
+ 11 files changed, 193 insertions(+), 46 deletions(-)
+ create mode 100644 include/cobalt/kernel/sched-dyna.h
+
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+index 4289f95ef..99a31eb9d 100644
+--- a/.vscode/settings.json
++++ b/.vscode/settings.json
+@@ -2,6 +2,9 @@
+     "files.associations": {
+         "sched.h": "c",
+         "kernel.h": "c",
+-        "sysinfo.h": "c"
++        "sysinfo.h": "c",
++        "sched-weak.h": "c",
++        "sched-quota.h": "c",
++        "sched-dyna.h": "c"
+     }
+ }
+\ No newline at end of file
+diff --git a/include/cobalt/kernel/list.h b/include/cobalt/kernel/list.h
+index ec029ef09..c84872018 100644
+--- a/include/cobalt/kernel/list.h
++++ b/include/cobalt/kernel/list.h
+@@ -41,6 +41,12 @@ do {										\
+ #define list_add_prilf(__new, __head, __member_pri, __member_next)		\
+ 	__list_add_pri(__new, __head, __member_pri, __member_next, <)
+ 
++#define list_add_priff_bis(__new, __head, __member_pri, __member_next)		\
++	__list_add_pri(__new, __head, __member_pri, __member_next, >=)
++
++#define list_add_prilf_bis(__new, __head, __member_pri, __member_next)		\
++	__list_add_pri(__new, __head, __member_pri, __member_next, >)
++
+ #define list_get_entry(__head, __type, __member)		\
+   ({								\
+ 	  __type *__item;					\
+diff --git a/include/cobalt/kernel/sched-dyna.h b/include/cobalt/kernel/sched-dyna.h
+new file mode 100644
+index 000000000..01978b176
+--- /dev/null
++++ b/include/cobalt/kernel/sched-dyna.h
+@@ -0,0 +1,118 @@
++/*
++ * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
++ *
++ * Xenomai is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published
++ * by the Free Software Foundation; either version 2 of the License,
++ * or (at your option) any later version.
++ *
++ * Xenomai is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with Xenomai; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
++ * 02111-1307, USA.
++ */
++
++/**
++ * @addtogroup cobalt_core_sched
++ * @{
++ */
++
++extern struct xnsched_class xnsched_class_dyna;
++
++static inline void __xnsched_dyna_requeue(struct xnthread *thread)
++{
++	xnsched_dyna_addq(&thread->sched->dyna.runnable, thread);
++}
++
++static inline void __xnsched_dyna_enqueue(struct xnthread *thread)
++{
++	xnsched_dyna_addq_tail(&thread->sched->dyna.runnable, thread);
++}
++
++static inline void __xnsched_dyna_dequeue(struct xnthread *thread)
++{
++	xnsched_delq(&thread->sched->dyna.runnable, thread);
++}
++
++static inline void __xnsched_dyna_track_weakness(struct xnthread *thread)
++{
++	/*
++	 * We have to track threads exiting weak scheduling, i.e. any
++	 * thread leaving the WEAK class code if compiled in, or
++	 * assigned a zero priority if weak threads are hosted by the
++	 * RT class.
++	 *
++	 * CAUTION: since we need to check the effective priority
++	 * level for determining the weakness state, this can only
++	 * apply to non-boosted threads.
++	 */
++	if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_WEAK) || thread->cprio)
++		xnthread_clear_state(thread, XNWEAK);
++	else
++		xnthread_set_state(thread, XNWEAK);
++}
++
++static inline bool __xnsched_dyna_setparam(struct xnthread *thread,
++					 const union xnsched_policy_param *p)
++{	
++	thread->next_deadline = p->rt.deadline;
++
++	if (!xnthread_test_state(thread, XNBOOST))
++		__xnsched_dyna_track_weakness(thread);
++
++	return false;
++}
++
++static inline void __xnsched_dyna_getparam(struct xnthread *thread,
++					 union xnsched_policy_param *p)
++{
++	p->rt.deadline = thread->next_deadline;
++}
++
++static inline void __xnsched_dyna_trackprio(struct xnthread *thread,
++					  const union xnsched_policy_param *p)
++{
++	if (p)
++		thread->cprio = p->rt.prio; /* Force update. */
++	else {
++		thread->cprio = thread->bprio;
++		/* Leaving PI/PP, so non-boosted by definition. */
++		__xnsched_dyna_track_weakness(thread);
++	}
++}
++
++static inline void __xnsched_dyna_protectprio(struct xnthread *thread, int prio)
++{
++	/*
++	 * The RT class supports the widest priority range from
++	 * XNSCHED_CORE_MIN_PRIO to XNSCHED_CORE_MAX_PRIO inclusive,
++	 * no need to cap the input value which is guaranteed to be in
++	 * the range [1..XNSCHED_CORE_MAX_PRIO].
++	 */
++	thread->cprio = prio;
++}
++
++static inline void __xnsched_dyna_forget(struct xnthread *thread)
++{
++}
++
++static inline int xnsched_dyna_init_thread(struct xnthread *thread)
++{
++	return 0;
++}
++
++#ifdef CONFIG_XENO_OPT_SCHED_CLASSES
++struct xnthread *xnsched_rt_pick(struct xnsched *sched);
++#else
++static inline struct xnthread *xnsched_dyna_pick(struct xnsched *sched)
++{
++	return xnsched_getq(&sched->rt.runnable);
++}
++#endif
++
++void xnsched_dyna_tick(struct xnsched *sched);
+diff --git a/include/cobalt/kernel/sched-rt.h b/include/cobalt/kernel/sched-rt.h
+index 992a5ba27..338823542 100644
+--- a/include/cobalt/kernel/sched-rt.h
++++ b/include/cobalt/kernel/sched-rt.h
+@@ -129,11 +129,6 @@ static inline void __xnsched_rt_forget(struct xnthread *thread)
+ {
+ }
+ 
+-static inline int xnsched_rt_init_thread(struct xnthread *thread)
+-{
+-	return 0;
+-}
+-
+ #ifdef CONFIG_XENO_OPT_SCHED_CLASSES
+ struct xnthread *xnsched_rt_pick(struct xnsched *sched);
+ #else
+diff --git a/include/cobalt/kernel/sched.h b/include/cobalt/kernel/sched.h
+index c13f46ff7..648c2d0e6 100644
+--- a/include/cobalt/kernel/sched.h
++++ b/include/cobalt/kernel/sched.h
+@@ -52,6 +52,10 @@ struct xnsched_rt {
+ 	xnsched_queue_t runnable;	/*!< Runnable thread queue. */
+ };
+ 
++struct xnsched_dyna {
++	xnsched_queue_t runnable;
++};
++
+ /*!
+  * \brief Scheduling information structure.
+  */
+@@ -71,6 +75,7 @@ struct xnsched {
+ #endif
+ 	/*!< Context of built-in real-time class. */
+ 	struct xnsched_rt rt;
++	struct xnsched_dyna dyna;
+ #ifdef CONFIG_XENO_OPT_SCHED_WEAK
+ 	/*!< Context of weak scheduling class. */
+ 	struct xnsched_weak weak;
+@@ -352,6 +357,7 @@ bool xnsched_set_effective_priority(struct xnthread *thread,
+ 
+ #include <cobalt/kernel/sched-idle.h>
+ #include <cobalt/kernel/sched-rt.h>
++#include <cobalt/kernel/sched-dyna.h>
+ 
+ int xnsched_init_proc(void);
+ 
+@@ -417,7 +423,6 @@ static inline int xnsched_init_thread(struct xnthread *thread)
+ 	int ret = 0;
+ 
+ 	xnsched_idle_init_thread(thread);
+-	xnsched_rt_init_thread(thread);
+ 
+ #ifdef CONFIG_XENO_OPT_SCHED_TP
+ 	ret = xnsched_tp_init_thread(thread);
+@@ -582,23 +587,34 @@ static inline void xnsched_kick(struct xnthread *thread)
+ static inline void xnsched_enqueue(struct xnthread *thread)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+-
+-	if (sched_class != &xnsched_class_idle)
++	if(sched_class == &xnsched_class_dyna){
++		__xnsched_dyna_enqueue(thread);
++	}
++	else if(sched_class != &xnsched_class_idle){
+ 		__xnsched_rt_enqueue(thread);
++	}
+ }
+ 
+ static inline void xnsched_dequeue(struct xnthread *thread)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+ 
+-	if (sched_class != &xnsched_class_idle)
++	if(sched_class == &xnsched_class_dyna){
++		__xnsched_dyna_dequeue(thread);
++	}	
++	else if (sched_class != &xnsched_class_idle){
+ 		__xnsched_rt_dequeue(thread);
++	}
++		
+ }
+ 
+ static inline void xnsched_requeue(struct xnthread *thread)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+ 
++	if(sched_class == &xnsched_class_dyna)
++		__xnsched_dyna_requeue(thread);
++
+ 	if (sched_class != &xnsched_class_idle)
+ 		__xnsched_rt_requeue(thread);
+ }
+@@ -610,6 +626,9 @@ static inline bool xnsched_setparam(struct xnthread *thread,
+ 
+ 	if (sched_class == &xnsched_class_idle)
+ 		return __xnsched_idle_setparam(thread, p);
++	
++	if(sched_class == &xnsched_class_dyna)
++		return __xnsched_dyna_setparam(thread,p);
+ 
+ 	return __xnsched_rt_setparam(thread, p);
+ }
+@@ -621,6 +640,8 @@ static inline void xnsched_getparam(struct xnthread *thread,
+ 
+ 	if (sched_class == &xnsched_class_idle)
+ 		__xnsched_idle_getparam(thread, p);
++	else if (sched_class == &xnsched_class_dyna)
++		__xnsched_dyna_getparam(thread, p);
+ 	else
+ 		__xnsched_rt_getparam(thread, p);
+ }
+diff --git a/include/cobalt/kernel/schedqueue.h b/include/cobalt/kernel/schedqueue.h
+index f7e87a345..12f4245e5 100644
+--- a/include/cobalt/kernel/schedqueue.h
++++ b/include/cobalt/kernel/schedqueue.h
+@@ -79,8 +79,10 @@ typedef struct list_head xnsched_queue_t;
+ 
+ #define xnsched_initq(__q)			INIT_LIST_HEAD(__q)
+ #define xnsched_emptyq_p(__q)			list_empty(__q)
+-#define xnsched_addq(__q, __t)			list_add_prilf(__t, __q, cprio, rlink)
+-#define xnsched_addq_tail(__q, __t)		list_add_priff(__t, __q, cprio, rlink)
++#define xnsched_addq(__q, __t)				list_add_prilf(__t, __q, cprio, rlink)
++#define xnsched_addq_tail(__q, __t)			list_add_priff(__t, __q, cprio, rlink)
++#define xnsched_dyna_addq(__q, __t)			list_add_prilf_bis(__t, __q, next_deadline, rlink)
++#define xnsched_dyna_addq_tail(__q, __t)	list_add_priff_bis(__t, __q, next_deadline, rlink)
+ #define xnsched_delq(__q, __t)			(void)(__q), list_del(&(__t)->rlink)
+ #define xnsched_getq(__q)							\
+ 	({									\
+diff --git a/kernel/cobalt/posix/sched.c b/kernel/cobalt/posix/sched.c
+index 1da4853f2..10bbe89b3 100644
+--- a/kernel/cobalt/posix/sched.c
++++ b/kernel/cobalt/posix/sched.c
+@@ -46,16 +46,15 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 		prio = -prio;
+ 		policy = SCHED_WEAK;
+ 	}
+-	//TODO BASTIEN vérifier que tout marche bien
++
+ 	if(deadline){
+ 		sched_class = &xnsched_class_dyna;
++		param->rt.deadline = deadline;
+ 	} else {
+ 		sched_class = &xnsched_class_rt;
+ 	}
+ 	param->rt.prio = prio;
+-	param->rt.deadline = deadline;
+ 
+-	//TODO BASTIEN toujours des doutes sur la policy. Il va falloir trouver un moyen de print
+ 
+ 	switch (policy) {
+ 	case SCHED_NORMAL:
+@@ -98,8 +97,7 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 			return NULL;
+ 		break;
+ 	case SCHED_DEADLINE:
+-		//TODO BASTIEN vérifier que la deadline est dans le futur
+-		break;
++		break;	
+ #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+ 	case SCHED_SPORADIC:
+ 		param->pss.normal_prio = param_ex->sched_priority;
+diff --git a/kernel/cobalt/sched-dyna.c b/kernel/cobalt/sched-dyna.c
+index ed5587f01..c6793a823 100644
+--- a/kernel/cobalt/sched-dyna.c
++++ b/kernel/cobalt/sched-dyna.c
+@@ -18,35 +18,35 @@
+  */
+ #include <cobalt/kernel/sched.h>
+ 
+-static void xnsched_rt_init(struct xnsched *sched)
++static void xnsched_dyna_init(struct xnsched *sched)
+ {
+ 	xnsched_initq(&sched->rt.runnable);
+ }
+ 
+-static void xnsched_rt_requeue(struct xnthread *thread)
++static void xnsched_dyna_requeue(struct xnthread *thread)
+ {
+ 	/*
+ 	 * Put back at same place: i.e. requeue to head of current
+ 	 * priority group (i.e. LIFO, used for preemption handling).
+ 	 */
+-	__xnsched_rt_requeue(thread);
++	__xnsched_dyna_requeue(thread);
+ }
+ 
+-static void xnsched_rt_enqueue(struct xnthread *thread)
++static void xnsched_dyna_enqueue(struct xnthread *thread)
+ {
+ 	/*
+ 	 * Enqueue for next pick: i.e. move to end of current priority
+ 	 * group (i.e. FIFO).
+ 	 */
+-	__xnsched_rt_enqueue(thread);
++	__xnsched_dyna_enqueue(thread);
+ }
+ 
+-static void xnsched_rt_dequeue(struct xnthread *thread)
++static void xnsched_dyna_dequeue(struct xnthread *thread)
+ {
+ 	/*
+ 	 * Pull from the runnable thread queue.
+ 	 */
+-	__xnsched_rt_dequeue(thread);
++	__xnsched_dyna_dequeue(thread);
+ }
+ 
+ static void xnsched_rt_rotate(struct xnsched *sched,
+@@ -79,7 +79,7 @@ static void xnsched_rt_rotate(struct xnsched *sched,
+ 		xnsched_putback(thread);
+ }
+ 
+-void xnsched_rt_tick(struct xnsched *sched)
++void xnsched_dyna_tick(struct xnsched *sched)
+ {
+ 	/*
+ 	 * The round-robin time credit is only consumed by a running
+@@ -91,27 +91,27 @@ void xnsched_rt_tick(struct xnsched *sched)
+ 	xnsched_putback(sched->curr);
+ }
+ 
+-static bool xnsched_rt_setparam(struct xnthread *thread,
++static bool xnsched_dyna_setparam(struct xnthread *thread,
+ 				const union xnsched_policy_param *p)
+ {
+-	return __xnsched_rt_setparam(thread, p);
++	return __xnsched_dyna_setparam(thread, p);
+ }
+ 
+-static void xnsched_rt_getparam(struct xnthread *thread,
++static void xnsched_dyna_getparam(struct xnthread *thread,
+ 				union xnsched_policy_param *p)
+ {
+-	__xnsched_rt_getparam(thread, p);
++	__xnsched_dyna_getparam(thread, p);
+ }
+ 
+ static void xnsched_rt_trackprio(struct xnthread *thread,
+ 				 const union xnsched_policy_param *p)
+ {
+-	__xnsched_rt_trackprio(thread, p);
++	__xnsched_dyna_trackprio(thread, p);
+ }
+ 
+ static void xnsched_rt_protectprio(struct xnthread *thread, int prio)
+ {
+-	__xnsched_rt_protectprio(thread, prio);
++	__xnsched_dyna_protectprio(thread, prio);
+ }
+ 
+ #ifdef CONFIG_XENO_OPT_VFILE
+@@ -232,20 +232,20 @@ static void xnsched_rt_cleanup_vfile(struct xnsched_class *schedclass)
+ #endif /* CONFIG_XENO_OPT_VFILE */
+ 
+ struct xnsched_class xnsched_class_dyna = {
+-	.sched_init		=	xnsched_rt_init,
+-	.sched_enqueue		=	xnsched_rt_enqueue,
+-	.sched_dequeue		=	xnsched_rt_dequeue,
+-	.sched_requeue		=	xnsched_rt_requeue,
+-	.sched_pick		=	xnsched_rt_pick,
+-	.sched_tick		=	xnsched_rt_tick,
+-	.sched_rotate		=	xnsched_rt_rotate,
++	.sched_init		=	xnsched_dyna_init,
++	.sched_enqueue		=	xnsched_dyna_enqueue,
++	.sched_dequeue		=	xnsched_dyna_dequeue,
++	.sched_requeue		=	xnsched_dyna_requeue,
++	.sched_pick		=	xnsched_dyna_pick,
++	.sched_tick		=	xnsched_dyna_tick,
++	.sched_rotate		=	xnsched_dyna_rotate,
+ 	.sched_forget		=	NULL,
+ 	.sched_kick		=	NULL,
+ 	.sched_declare		=	NULL,
+-	.sched_setparam		=	xnsched_rt_setparam,
+-	.sched_trackprio	=	xnsched_rt_trackprio,
+-	.sched_protectprio	=	xnsched_rt_protectprio,
+-	.sched_getparam		=	xnsched_rt_getparam,
++	.sched_setparam		=	xnsched_dyna_setparam,
++	.sched_trackprio	=	xnsched_dyna_trackprio,
++	.sched_protectprio	=	xnsched_dyna_protectprio,
++	.sched_getparam		=	xnsched_dyna_getparam,
+ #ifdef CONFIG_XENO_OPT_VFILE
+ 	.sched_init_vfile	=	xnsched_rt_init_vfile,
+ 	.sched_cleanup_vfile	=	xnsched_rt_cleanup_vfile,
+diff --git a/kernel/cobalt/thread.c b/kernel/cobalt/thread.c
+index c7f6129bc..777f43115 100644
+--- a/kernel/cobalt/thread.c
++++ b/kernel/cobalt/thread.c
+@@ -186,7 +186,6 @@ int __xnthread_init(struct xnthread *thread,
+ 	thread->wprio = XNSCHED_IDLE_PRIO;
+ 	thread->cprio = XNSCHED_IDLE_PRIO;
+ 	thread->bprio = XNSCHED_IDLE_PRIO;
+-	//TODO BASTIEN prévoir une valeur ici
+ 	thread->next_deadline = 0;
+ 	thread->lock_count = 0;
+ 	thread->rrperiod = XN_INFINITE;
+diff --git a/lib/alchemy/task.c b/lib/alchemy/task.c
+index 0bef70909..672920292 100644
+--- a/lib/alchemy/task.c
++++ b/lib/alchemy/task.c
+@@ -534,7 +534,7 @@ out:
+ 	return ret;
+ }
+ 
+-
++//next_deadline est ici relatif
+ #ifndef DOXYGEN_CPP
+ CURRENT_IMPL(int, rt_task_create_dyna, (RT_TASK *task, const char *name,
+ 				   int stksize, xnticks_t next_deadline, int mode))
+@@ -551,7 +551,14 @@ int rt_task_create_dyna(RT_TASK *task, const char *name,
+ 	if (mode & ~(T_LOCK | T_WARNSW | T_JOINABLE))
+ 		return -EINVAL;
+ 
++	//The next deadline must be in the past
++	if(next_deadline <= 0)
++		return -EINVAL;
++	
++	next_deadline += rt_timer_read();
++
+ 	CANCEL_DEFER(svc);
++
+ 	//Ici on créer la tâche alchemy
+ 	ret = create_tcb_dyna(&tcb, task, name, next_deadline, mode);
+ 	if (ret)
+diff --git a/lib/cobalt/thread.c b/lib/cobalt/thread.c
+index 427ad91dc..17f66c420 100644
+--- a/lib/cobalt/thread.c
++++ b/lib/cobalt/thread.c
+@@ -141,7 +141,6 @@ int pthread_create_ex(pthread_t *ptid_r,
+ 	if (attr_ex == NULL)
+ 		attr_ex = &default_attr_ex;
+ 
+-	//TODO BASTIEN vérifier
+ 	pthread_getschedparam_ex(pthread_self(), &iargs.policy, &iargs.param_ex);
+ 	iargs.parent_prio = iargs.param_ex.sched_priority;
+ 	memcpy(&attr, &attr_ex->std, sizeof(attr));
+@@ -150,7 +149,6 @@ int pthread_create_ex(pthread_t *ptid_r,
+ 	if (inherit == PTHREAD_EXPLICIT_SCHED) {
+ 		pthread_attr_getschedpolicy_ex(attr_ex, &iargs.policy);
+ 		pthread_attr_getschedparam_ex(attr_ex, &iargs.param_ex);
+-		//TODO BASTIEN si l'on passe toujours par là, pas de problème
+ 		printf("inherit == PTHREAD_EXPLICIT_SCHED");
+ 	}
+ 
+-- 
+2.17.1
+
+
+From 8c28aa5025bbc22ce1dadfaa3c00188fc7852a94 Mon Sep 17 00:00:00 2001
+From: Souchu Bastien <bsouchu@gmail.com>
+Date: Fri, 23 Apr 2021 08:28:26 +0200
+Subject: [PATCH 5/8] sched fini
+
+---
+ .vscode/settings.json              |  4 +-
+ include/cobalt/kernel/sched-dyna.h |  9 ++++
+ include/cobalt/kernel/sched.h      | 47 ++++++++++++--------
+ kernel/cobalt/Makefile             |  1 +
+ kernel/cobalt/sched-dyna.c         | 70 +++++++++++++++---------------
+ kernel/cobalt/sched.c              |  1 +
+ kernel/cobalt/thread.c             |  3 +-
+ lib/alchemy/task.c                 |  1 +
+ 8 files changed, 80 insertions(+), 56 deletions(-)
+
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+index 99a31eb9d..64c9a3429 100644
+--- a/.vscode/settings.json
++++ b/.vscode/settings.json
+@@ -5,6 +5,8 @@
+         "sysinfo.h": "c",
+         "sched-weak.h": "c",
+         "sched-quota.h": "c",
+-        "sched-dyna.h": "c"
++        "sched-dyna.h": "c",
++        "sched-rt.h": "c",
++        "sched-sporadic.h": "c"
+     }
+ }
+\ No newline at end of file
+diff --git a/include/cobalt/kernel/sched-dyna.h b/include/cobalt/kernel/sched-dyna.h
+index 01978b176..f221079af 100644
+--- a/include/cobalt/kernel/sched-dyna.h
++++ b/include/cobalt/kernel/sched-dyna.h
+@@ -22,6 +22,13 @@
+  * @{
+  */
+ 
++#ifndef _COBALT_KERNEL_SCHED_DYNA_H
++#define _COBALT_KERNEL_SCHED_DYNA_H
++
++#ifndef _COBALT_KERNEL_SCHED_H
++#error "please don't include cobalt/kernel/sched-dyna.h directly"
++#endif
++
+ extern struct xnsched_class xnsched_class_dyna;
+ 
+ static inline void __xnsched_dyna_requeue(struct xnthread *thread)
+@@ -116,3 +123,5 @@ static inline struct xnthread *xnsched_dyna_pick(struct xnsched *sched)
+ #endif
+ 
+ void xnsched_dyna_tick(struct xnsched *sched);
++
++#endif
+diff --git a/include/cobalt/kernel/sched.h b/include/cobalt/kernel/sched.h
+index 648c2d0e6..7e069136c 100644
+--- a/include/cobalt/kernel/sched.h
++++ b/include/cobalt/kernel/sched.h
+@@ -587,11 +587,13 @@ static inline void xnsched_kick(struct xnthread *thread)
+ static inline void xnsched_enqueue(struct xnthread *thread)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+-	if(sched_class == &xnsched_class_dyna){
+-		__xnsched_dyna_enqueue(thread);
+-	}
+-	else if(sched_class != &xnsched_class_idle){
+-		__xnsched_rt_enqueue(thread);
++	if(sched_class != &xnsched_class_idle){
++		if(thread->next_deadline){
++			__xnsched_dyna_enqueue(thread);
++		}
++		else{
++			__xnsched_rt_enqueue(thread);
++		}
+ 	}
+ }
+ 
+@@ -599,11 +601,13 @@ static inline void xnsched_dequeue(struct xnthread *thread)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+ 
+-	if(sched_class == &xnsched_class_dyna){
+-		__xnsched_dyna_dequeue(thread);
+-	}	
+-	else if (sched_class != &xnsched_class_idle){
+-		__xnsched_rt_dequeue(thread);
++	if(sched_class != &xnsched_class_idle){
++		if(thread->next_deadline){
++			__xnsched_dyna_dequeue(thread);
++		}
++		else{
++			__xnsched_rt_dequeue(thread);
++		}
+ 	}
+ 		
+ }
+@@ -612,11 +616,14 @@ static inline void xnsched_requeue(struct xnthread *thread)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+ 
+-	if(sched_class == &xnsched_class_dyna)
+-		__xnsched_dyna_requeue(thread);
+-
+-	if (sched_class != &xnsched_class_idle)
+-		__xnsched_rt_requeue(thread);
++	if(sched_class != &xnsched_class_idle){
++		if(thread->next_deadline){
++			__xnsched_dyna_requeue(thread);
++		}
++		else{
++			__xnsched_rt_requeue(thread);
++		}
++	}
+ }
+ 
+ static inline bool xnsched_setparam(struct xnthread *thread,
+@@ -627,10 +634,10 @@ static inline bool xnsched_setparam(struct xnthread *thread,
+ 	if (sched_class == &xnsched_class_idle)
+ 		return __xnsched_idle_setparam(thread, p);
+ 	
+-	if(sched_class == &xnsched_class_dyna)
++	if(thread->next_deadline)
+ 		return __xnsched_dyna_setparam(thread,p);
+-
+-	return __xnsched_rt_setparam(thread, p);
++	else
++		return __xnsched_rt_setparam(thread,p);
+ }
+ 
+ static inline void xnsched_getparam(struct xnthread *thread,
+@@ -640,12 +647,13 @@ static inline void xnsched_getparam(struct xnthread *thread,
+ 
+ 	if (sched_class == &xnsched_class_idle)
+ 		__xnsched_idle_getparam(thread, p);
+-	else if (sched_class == &xnsched_class_dyna)
++	else if (thread->next_deadline)
+ 		__xnsched_dyna_getparam(thread, p);
+ 	else
+ 		__xnsched_rt_getparam(thread, p);
+ }
+ 
++//TODO Bastien y a t'il besoin de cela pour EDF?
+ static inline void xnsched_trackprio(struct xnthread *thread,
+ 				     const union xnsched_policy_param *p)
+ {
+@@ -671,6 +679,7 @@ static inline void xnsched_protectprio(struct xnthread *thread, int prio)
+ 	thread->wprio = xnsched_calc_wprio(sched_class, thread->cprio);
+ }
+ 
++//TODO Bastien rt forget est vide
+ static inline void xnsched_forget(struct xnthread *thread)
+ {
+ 	--thread->base_class->nthreads;
+diff --git a/kernel/cobalt/Makefile b/kernel/cobalt/Makefile
+index 129005d8f..746cada0a 100644
+--- a/kernel/cobalt/Makefile
++++ b/kernel/cobalt/Makefile
+@@ -9,6 +9,7 @@ xenomai-y :=	arith.o 	\
+ 		registry.o	\
+ 		sched-idle.o	\
+ 		sched-rt.o	\
++		sched-dyna.o  \
+ 		sched.o		\
+ 		select.o	\
+ 		synch.o		\
+diff --git a/kernel/cobalt/sched-dyna.c b/kernel/cobalt/sched-dyna.c
+index c6793a823..3aa6d4230 100644
+--- a/kernel/cobalt/sched-dyna.c
++++ b/kernel/cobalt/sched-dyna.c
+@@ -49,7 +49,7 @@ static void xnsched_dyna_dequeue(struct xnthread *thread)
+ 	__xnsched_dyna_dequeue(thread);
+ }
+ 
+-static void xnsched_rt_rotate(struct xnsched *sched,
++static void xnsched_dyna_rotate(struct xnsched *sched,
+ 			      const union xnsched_policy_param *p)
+ {
+ 	struct xnthread *thread, *curr;
+@@ -103,26 +103,26 @@ static void xnsched_dyna_getparam(struct xnthread *thread,
+ 	__xnsched_dyna_getparam(thread, p);
+ }
+ 
+-static void xnsched_rt_trackprio(struct xnthread *thread,
++static void xnsched_dyna_trackprio(struct xnthread *thread,
+ 				 const union xnsched_policy_param *p)
+ {
+ 	__xnsched_dyna_trackprio(thread, p);
+ }
+ 
+-static void xnsched_rt_protectprio(struct xnthread *thread, int prio)
++static void xnsched_dyna_protectprio(struct xnthread *thread, int prio)
+ {
+ 	__xnsched_dyna_protectprio(thread, prio);
+ }
+ 
+ #ifdef CONFIG_XENO_OPT_VFILE
+ 
+-struct xnvfile_directory sched_rt_vfroot;
++struct xnvfile_directory sched_dyna_vfroot;
+ 
+-struct vfile_sched_rt_priv {
++struct vfile_sched_dyna_priv {
+ 	struct xnthread *curr;
+ };
+ 
+-struct vfile_sched_rt_data {
++struct vfile_sched_dyna_data {
+ 	int cpu;
+ 	pid_t pid;
+ 	char name[XNOBJECT_NAME_LEN];
+@@ -130,19 +130,19 @@ struct vfile_sched_rt_data {
+ 	int cprio;
+ };
+ 
+-static struct xnvfile_snapshot_ops vfile_sched_rt_ops;
++static struct xnvfile_snapshot_ops vfile_sched_dyna_ops;
+ 
+-static struct xnvfile_snapshot vfile_sched_rt = {
+-	.privsz = sizeof(struct vfile_sched_rt_priv),
+-	.datasz = sizeof(struct vfile_sched_rt_data),
++static struct xnvfile_snapshot vfile_sched_dyna = {
++	.privsz = sizeof(struct vfile_sched_dyna_priv),
++	.datasz = sizeof(struct vfile_sched_dyna_data),
+ 	.tag = &nkthreadlist_tag,
+-	.ops = &vfile_sched_rt_ops,
++	.ops = &vfile_sched_dyna_ops,
+ };
+ 
+-static int vfile_sched_rt_rewind(struct xnvfile_snapshot_iterator *it)
++static int vfile_sched_dyna_rewind(struct xnvfile_snapshot_iterator *it)
+ {
+-	struct vfile_sched_rt_priv *priv = xnvfile_iterator_priv(it);
+-	int nrthreads = xnsched_class_rt.nthreads;
++	struct vfile_sched_dyna_priv *priv = xnvfile_iterator_priv(it);
++	int nrthreads = xnsched_class_dyna.nthreads;
+ 
+ 	if (nrthreads == 0)
+ 		return -ESRCH;
+@@ -152,11 +152,11 @@ static int vfile_sched_rt_rewind(struct xnvfile_snapshot_iterator *it)
+ 	return nrthreads;
+ }
+ 
+-static int vfile_sched_rt_next(struct xnvfile_snapshot_iterator *it,
++static int vfile_sched_dyna_next(struct xnvfile_snapshot_iterator *it,
+ 			       void *data)
+ {
+-	struct vfile_sched_rt_priv *priv = xnvfile_iterator_priv(it);
+-	struct vfile_sched_rt_data *p = data;
++	struct vfile_sched_dyna_priv *priv = xnvfile_iterator_priv(it);
++	struct vfile_sched_dyna_data *p = data;
+ 	struct xnthread *thread;
+ 
+ 	if (priv->curr == NULL)
+@@ -168,7 +168,7 @@ static int vfile_sched_rt_next(struct xnvfile_snapshot_iterator *it,
+ 	else
+ 		priv->curr = list_next_entry(thread, glink);
+ 
+-	if (thread->base_class != &xnsched_class_rt ||
++	if (thread->base_class != &xnsched_class_dyna ||
+ 	    xnthread_test_state(thread, XNWEAK))
+ 		return VFILE_SEQ_SKIP;
+ 
+@@ -181,10 +181,10 @@ static int vfile_sched_rt_next(struct xnvfile_snapshot_iterator *it,
+ 	return 1;
+ }
+ 
+-static int vfile_sched_rt_show(struct xnvfile_snapshot_iterator *it,
++static int vfile_sched_dyna_show(struct xnvfile_snapshot_iterator *it,
+ 			       void *data)
+ {
+-	struct vfile_sched_rt_data *p = data;
++	struct vfile_sched_dyna_data *p = data;
+ 	char pribuf[16], ptbuf[16];
+ 
+ 	if (p == NULL)
+@@ -204,29 +204,29 @@ static int vfile_sched_rt_show(struct xnvfile_snapshot_iterator *it,
+ 	return 0;
+ }
+ 
+-static struct xnvfile_snapshot_ops vfile_sched_rt_ops = {
+-	.rewind = vfile_sched_rt_rewind,
+-	.next = vfile_sched_rt_next,
+-	.show = vfile_sched_rt_show,
++static struct xnvfile_snapshot_ops vfile_sched_dyna_ops = {
++	.rewind = vfile_sched_dyna_rewind,
++	.next = vfile_sched_dyna_next,
++	.show = vfile_sched_dyna_show,
+ };
+ 
+-static int xnsched_rt_init_vfile(struct xnsched_class *schedclass,
++static int xnsched_dyna_init_vfile(struct xnsched_class *schedclass,
+ 				 struct xnvfile_directory *vfroot)
+ {
+ 	int ret;
+ 
+-	ret = xnvfile_init_dir(schedclass->name, &sched_rt_vfroot, vfroot);
++	ret = xnvfile_init_dir(schedclass->name, &sched_dyna_vfroot, vfroot);
+ 	if (ret)
+ 		return ret;
+ 
+-	return xnvfile_init_snapshot("threads", &vfile_sched_rt,
+-				     &sched_rt_vfroot);
++	return xnvfile_init_snapshot("threads", &vfile_sched_dyna,
++				     &sched_dyna_vfroot);
+ }
+ 
+-static void xnsched_rt_cleanup_vfile(struct xnsched_class *schedclass)
++static void xnsched_dyna_cleanup_vfile(struct xnsched_class *schedclass)
+ {
+-	xnvfile_destroy_snapshot(&vfile_sched_rt);
+-	xnvfile_destroy_dir(&sched_rt_vfroot);
++	xnvfile_destroy_snapshot(&vfile_sched_dyna);
++	xnvfile_destroy_dir(&sched_dyna_vfroot);
+ }
+ 
+ #endif /* CONFIG_XENO_OPT_VFILE */
+@@ -247,11 +247,11 @@ struct xnsched_class xnsched_class_dyna = {
+ 	.sched_protectprio	=	xnsched_dyna_protectprio,
+ 	.sched_getparam		=	xnsched_dyna_getparam,
+ #ifdef CONFIG_XENO_OPT_VFILE
+-	.sched_init_vfile	=	xnsched_rt_init_vfile,
+-	.sched_cleanup_vfile	=	xnsched_rt_cleanup_vfile,
++	.sched_init_vfile	=	xnsched_dyna_init_vfile,
++	.sched_cleanup_vfile	=	xnsched_dyna_cleanup_vfile,
+ #endif
+-	.weight			=	XNSCHED_CLASS_WEIGHT(4),
++	.weight			=	XNSCHED_CLASS_WEIGHT(5),
+ 	.policy			=	SCHED_FIFO,
+-	.name			=	"rt"
++	.name			=	"dyna"
+ };
+ EXPORT_SYMBOL_GPL(xnsched_class_dyna);
+diff --git a/kernel/cobalt/sched.c b/kernel/cobalt/sched.c
+index 943574fb2..3e20ed6d4 100644
+--- a/kernel/cobalt/sched.c
++++ b/kernel/cobalt/sched.c
+@@ -87,6 +87,7 @@ void xnsched_register_classes(void)
+ 	xnsched_register_class(&xnsched_class_quota);
+ #endif
+ 	xnsched_register_class(&xnsched_class_rt);
++	xnsched_register_class(&xnsched_class_dyna);
+ }
+ 
+ #ifdef CONFIG_XENO_OPT_WATCHDOG
+diff --git a/kernel/cobalt/thread.c b/kernel/cobalt/thread.c
+index 777f43115..de2bed3de 100644
+--- a/kernel/cobalt/thread.c
++++ b/kernel/cobalt/thread.c
+@@ -102,7 +102,8 @@ static int kthread_trampoline(void *arg)
+ 	 * anything that is not from Xenomai's RT class is assumed to
+ 	 * belong to SCHED_NORMAL linux-wise.
+ 	 */
+-	if (thread->sched_class != &xnsched_class_rt) {
++	//TODO Bastien abolument regler cela
++	if (thread->sched_class != &xnsched_class_rt && thread->sched_class != &xnsched_class_dyna) {
+ 		policy = SCHED_NORMAL;
+ 		prio = 0;
+ 	} else {
+diff --git a/lib/alchemy/task.c b/lib/alchemy/task.c
+index 672920292..f52761a9e 100644
+--- a/lib/alchemy/task.c
++++ b/lib/alchemy/task.c
+@@ -1060,6 +1060,7 @@ int rt_task_wait_period(unsigned long *overruns_r)
+ 		return -EPERM;
+ 
+ 	return threadobj_wait_period(overruns_r);
++	
+ }
+ 
+ /**
+-- 
+2.17.1
+
+
+From 3be2c84afa0c78ecccb90786473db55259b9f827 Mon Sep 17 00:00:00 2001
+From: Souchu Bastien <bsouchu@gmail.com>
+Date: Thu, 29 Apr 2021 15:17:04 +0200
+Subject: [PATCH 6/8] no priority
+
+---
+ include/cobalt/uapi/sched.h         | 3 ++-
+ include/copperplate/threadobj.h     | 1 +
+ include/mercury/boilerplate/sched.h | 3 ++-
+ kernel/cobalt/posix/sched.c         | 2 +-
+ kernel/cobalt/posix/thread.c        | 1 -
+ kernel/cobalt/sched.c               | 6 +-----
+ kernel/cobalt/thread.c              | 2 --
+ lib/alchemy/task.c                  | 4 ++--
+ lib/copperplate/internal.c          | 4 ++--
+ lib/copperplate/threadobj.c         | 4 ++++
+ 10 files changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/include/cobalt/uapi/sched.h b/include/cobalt/uapi/sched.h
+index 578a00f08..9d3cb8b45 100644
+--- a/include/cobalt/uapi/sched.h
++++ b/include/cobalt/uapi/sched.h
+@@ -91,7 +91,8 @@ enum {
+ 	sched_quota_get,
+ };
+ struct __sched_deadline_param {
+-	__u64 sched_deadline;
++	__u64 sched_absolute_deadline;
++	__u64 sched_relative_deadline;
+ };
+ 
+ struct __sched_config_quota {
+diff --git a/include/copperplate/threadobj.h b/include/copperplate/threadobj.h
+index 7e6904f4c..98b4e0c92 100644
+--- a/include/copperplate/threadobj.h
++++ b/include/copperplate/threadobj.h
+@@ -29,6 +29,7 @@
+ #include <boilerplate/sched.h>
+ #include <copperplate/clockobj.h>
+ #include <copperplate/heapobj.h>
++#include <sched.h>
+ 
+ #ifdef CONFIG_XENO_COBALT
+ 
+diff --git a/include/mercury/boilerplate/sched.h b/include/mercury/boilerplate/sched.h
+index adeb795fc..51535f6c5 100644
+--- a/include/mercury/boilerplate/sched.h
++++ b/include/mercury/boilerplate/sched.h
+@@ -26,7 +26,8 @@ struct __sched_rr_param {
+ };
+ 
+ struct __sched_deadline_param {
+-	__u64 sched_deadline;
++	__u64 sched_absolute_deadline;
++	__u64 sched_relative_deadline;
+ };
+ 
+ struct sched_param_ex {
+diff --git a/kernel/cobalt/posix/sched.c b/kernel/cobalt/posix/sched.c
+index 10bbe89b3..75ab57ee1 100644
+--- a/kernel/cobalt/posix/sched.c
++++ b/kernel/cobalt/posix/sched.c
+@@ -33,7 +33,7 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 	xnticks_t tslice;
+ 
+ 	prio = param_ex->sched_priority;
+-	deadline = param_ex->sched_u.deadline.sched_deadline;
++	deadline = param_ex->sched_u.deadline.sched_absolute_deadline;
+ 	tslice = XN_INFINITE;
+ 	policy = u_policy;
+ 
+diff --git a/kernel/cobalt/posix/thread.c b/kernel/cobalt/posix/thread.c
+index 2ed08412d..6758fcfcf 100644
+--- a/kernel/cobalt/posix/thread.c
++++ b/kernel/cobalt/posix/thread.c
+@@ -364,7 +364,6 @@ static int pthread_create(struct cobalt_thread **thread_p,
+ 		return -EAGAIN;
+ 
+ 	tslice = cobalt_time_slice;
+-	//TODO BASTIEN on établit la classe du scheduler en fonction de param_ex et surtout de policy
+ 	sched_class = cobalt_sched_policy_param(&param, policy,
+ 						param_ex, &tslice);
+ 	if (sched_class == NULL) {
+diff --git a/kernel/cobalt/sched.c b/kernel/cobalt/sched.c
+index 3e20ed6d4..952c9c642 100644
+--- a/kernel/cobalt/sched.c
++++ b/kernel/cobalt/sched.c
+@@ -406,7 +406,6 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	bool effective;
+ 	int ret;
+ 
+-	//TODO BASTIEN bien penser à faire in checkparam pour la sched class dynamique
+ 	ret = xnsched_chkparam(sched_class, thread, p);
+ 	if (ret)
+ 		return ret;
+@@ -419,7 +418,6 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	 * affect the previous class (such as touching thread->rlink
+ 	 * for instance).
+ 	 */
+-	//TODO BASTIEN à priori rien à faire ici
+ 	if (sched_class != thread->base_class) {
+ 		ret = xnsched_declare(sched_class, thread, p);
+ 		if (ret)
+@@ -457,8 +455,7 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	/*
+ 	 * This is the ONLY place where calling xnsched_setparam() is
+ 	 * legit, sane and safe.
+-	 */
+-	//TODO BASTIEN changements à faire ici impérativement
++	 */nt
+ 	effective = xnsched_setparam(thread, p);
+ 	if (effective) {
+ 		thread->sched_class = sched_class;
+@@ -466,7 +463,6 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	} else if (XENO_DEBUG(COBALT))
+ 		thread->sched_class = orig_effective_class;
+ 
+-	//TODO BASTIEN à priori, si l'on arrive à faire tout les changements avant, rien à faire ici et cela devrait fonctionner
+ 	if (xnthread_test_state(thread, XNREADY))
+ 		xnsched_enqueue(thread);
+ 
+diff --git a/kernel/cobalt/thread.c b/kernel/cobalt/thread.c
+index de2bed3de..3872200d0 100644
+--- a/kernel/cobalt/thread.c
++++ b/kernel/cobalt/thread.c
+@@ -220,7 +220,6 @@ int __xnthread_init(struct xnthread *thread,
+ 	if (ret)
+ 		goto err_out;
+ 
+-	//TODO BASTIEN probablement des changements uniquement ici
+ 	ret = xnsched_set_policy(thread, sched_class, sched_param);
+ 	if (ret)
+ 		goto err_out;
+@@ -556,7 +555,6 @@ int xnthread_init(struct xnthread *thread,
+ 
+ 	sched = xnsched_struct(cpumask_first(&affinity));
+ 
+-	//TODO BASTIEN à priori les seuls changements sont à faire ici
+ 	ret = __xnthread_init(thread, attr, sched, sched_class, sched_param);
+ 	if (ret)
+ 		return ret;
+diff --git a/lib/alchemy/task.c b/lib/alchemy/task.c
+index f52761a9e..51b9d889d 100644
+--- a/lib/alchemy/task.c
++++ b/lib/alchemy/task.c
+@@ -361,8 +361,8 @@ static int create_tcb_dyna(struct alchemy_task **tcbp, RT_TASK *task,
+ 	idata.magic = task_magic;
+ 	idata.finalizer = task_finalizer;
+ 	idata.policy = next_deadline ? SCHED_DEADLINE : SCHED_OTHER;
+-	idata.param_ex.sched_u.deadline.sched_deadline = next_deadline;
+-	//TODO BASTIEN vérifier qu'il n'y a pas de problème ici
++	idata.param_ex.sched_u.deadline.sched_absolute_deadline = next_deadline;
++	idata.param_ex.sched_u.deadline.sched_relative_deadline = next_deadline;
+ 	ret = threadobj_init(&tcb->thobj, &idata);
+ 	if (ret)
+ 		goto fail_threadinit;
+diff --git a/lib/copperplate/internal.c b/lib/copperplate/internal.c
+index 2c08ac277..d61b730c9 100644
+--- a/lib/copperplate/internal.c
++++ b/lib/copperplate/internal.c
+@@ -60,8 +60,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
+ 	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_INHERIT_SCHED);
+ 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
+ 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
+-	//TODO BASTIEN trouver un moyen de faire passer la deadline proprement
+-	attr_ex.nonstd.sched_param.sched_u.deadline.sched_deadline = cta->param_ex.sched_u.deadline.sched_deadline;
++	attr_ex.nonstd.sched_param.sched_u.deadline.sched_absolute_deadline = cta->param_ex.sched_u.deadline.sched_absolute_deadline;
++	attr_ex.nonstd.sched_param.sched_u.deadline.sched_relative_deadline = cta->param_ex.sched_u.deadline.sched_relative_deadline;
+ 	ret = -pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta);
+ 	pthread_attr_destroy_ex(&attr_ex);
+ 	if (ret)
+diff --git a/lib/copperplate/threadobj.c b/lib/copperplate/threadobj.c
+index a3101baa1..e7947644a 100644
+--- a/lib/copperplate/threadobj.c
++++ b/lib/copperplate/threadobj.c
+@@ -1665,6 +1665,7 @@ int threadobj_wait_period(unsigned long *overruns_r)
+ 	struct threadobj *current = threadobj_current();
+ 	siginfo_t si;
+ 	int sig;
++	struct xnsched *sched;
+ 
+ 	if (!(current->status & __THREAD_S_PERIODIC))
+ 		return -EWOULDBLOCK;
+@@ -1672,6 +1673,9 @@ int threadobj_wait_period(unsigned long *overruns_r)
+ 	for (;;) {
+ 		current->run_state = __THREAD_S_DELAYED;
+ 		sig = __RT(sigwaitinfo(&sigperiod_set, &si));
++		if(current->schedparam.sched_u.deadline.sched_relative_deadline != 0)//We have to requeue the xnthread
++			sched = xnsched_struct(cpumask_first(CPU_MASK_ALL));
++			sched->dyna.runnable
+ 		current->run_state = __THREAD_S_RUNNING;
+ 		if (sig == SIGPERIOD)
+ 			break;
+-- 
+2.17.1
+
+
+From f21dc853cc8fb77f73cf3a2e7b8c80635a63470f Mon Sep 17 00:00:00 2001
+From: Souchu Bastien <bsouchu@gmail.com>
+Date: Tue, 29 Jun 2021 13:01:37 +0200
+Subject: [PATCH 7/8] test
+
+---
+ .vscode/settings.json           | 5 ++++-
+ include/cobalt/kernel/sched.h   | 2 --
+ include/copperplate/threadobj.h | 1 +
+ lib/cobalt/thread.c             | 1 -
+ lib/copperplate/internal.c      | 3 +++
+ lib/copperplate/threadobj.c     | 2 --
+ 6 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+index 64c9a3429..17998a377 100644
+--- a/.vscode/settings.json
++++ b/.vscode/settings.json
+@@ -7,6 +7,9 @@
+         "sched-quota.h": "c",
+         "sched-dyna.h": "c",
+         "sched-rt.h": "c",
+-        "sched-sporadic.h": "c"
++        "sched-sporadic.h": "c",
++        "threadobj.h": "c",
++        "internal.h": "c",
++        "clockobj.h": "c"
+     }
+ }
+\ No newline at end of file
+diff --git a/include/cobalt/kernel/sched.h b/include/cobalt/kernel/sched.h
+index 7e069136c..f5166517a 100644
+--- a/include/cobalt/kernel/sched.h
++++ b/include/cobalt/kernel/sched.h
+@@ -653,7 +653,6 @@ static inline void xnsched_getparam(struct xnthread *thread,
+ 		__xnsched_rt_getparam(thread, p);
+ }
+ 
+-//TODO Bastien y a t'il besoin de cela pour EDF?
+ static inline void xnsched_trackprio(struct xnthread *thread,
+ 				     const union xnsched_policy_param *p)
+ {
+@@ -679,7 +678,6 @@ static inline void xnsched_protectprio(struct xnthread *thread, int prio)
+ 	thread->wprio = xnsched_calc_wprio(sched_class, thread->cprio);
+ }
+ 
+-//TODO Bastien rt forget est vide
+ static inline void xnsched_forget(struct xnthread *thread)
+ {
+ 	--thread->base_class->nthreads;
+diff --git a/include/copperplate/threadobj.h b/include/copperplate/threadobj.h
+index 98b4e0c92..c0e2b7d96 100644
+--- a/include/copperplate/threadobj.h
++++ b/include/copperplate/threadobj.h
+@@ -27,6 +27,7 @@
+ #include <boilerplate/list.h>
+ #include <boilerplate/lock.h>
+ #include <boilerplate/sched.h>
++#include <cobalt/kernel/sched.h>
+ #include <copperplate/clockobj.h>
+ #include <copperplate/heapobj.h>
+ #include <sched.h>
+diff --git a/lib/cobalt/thread.c b/lib/cobalt/thread.c
+index 17f66c420..79d3267ba 100644
+--- a/lib/cobalt/thread.c
++++ b/lib/cobalt/thread.c
+@@ -768,7 +768,6 @@ COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
+  *
+  * @apitags{thread-unrestricted}
+  */
+-//TODO BASTIEN verifier ici , difficile de comprendre
+ int pthread_getschedparam_ex(pthread_t thread,
+ 			     int *__restrict__ policy_r,
+ 			     struct sched_param_ex *__restrict__ param_ex)
+diff --git a/lib/copperplate/internal.c b/lib/copperplate/internal.c
+index d61b730c9..da6f387e8 100644
+--- a/lib/copperplate/internal.c
++++ b/lib/copperplate/internal.c
+@@ -70,6 +70,9 @@ int copperplate_create_thread(struct corethread_attributes *cta,
+ 	return __bt(thread_spawn_epilogue(cta));
+ }
+ 
++int copperplate_roll_dynamic_priority(pthread_t ptid, xnticks_t deadline)
++	
++
+ int copperplate_renice_local_thread(pthread_t ptid, int policy,
+ 				    const struct sched_param_ex *param_ex)
+ {
+diff --git a/lib/copperplate/threadobj.c b/lib/copperplate/threadobj.c
+index e7947644a..858f8867f 100644
+--- a/lib/copperplate/threadobj.c
++++ b/lib/copperplate/threadobj.c
+@@ -29,7 +29,6 @@
+ #include <fcntl.h>
+ #include <assert.h>
+ #include <limits.h>
+-#include <sched.h>
+ #include "boilerplate/signal.h"
+ #include "boilerplate/atomic.h"
+ #include "boilerplate/lock.h"
+@@ -1675,7 +1674,6 @@ int threadobj_wait_period(unsigned long *overruns_r)
+ 		sig = __RT(sigwaitinfo(&sigperiod_set, &si));
+ 		if(current->schedparam.sched_u.deadline.sched_relative_deadline != 0)//We have to requeue the xnthread
+ 			sched = xnsched_struct(cpumask_first(CPU_MASK_ALL));
+-			sched->dyna.runnable
+ 		current->run_state = __THREAD_S_RUNNING;
+ 		if (sig == SIGPERIOD)
+ 			break;
+-- 
+2.17.1
+
+
+From 37aed321405df633a39f17e16ad50599cadb9ed9 Mon Sep 17 00:00:00 2001
+From: Alexy Debus <alexy.debus@eleves.ec-nantes.fr>
+Date: Sat, 13 Nov 2021 00:07:50 +0100
+Subject: [PATCH 8/8] Added modifications to have a successful Xenomai-EDF
+ compilation without error during "make"
+
+---
+ include/copperplate/threadobj.h | 2 +-
+ lib/copperplate/internal.c      | 6 ++++--
+ lib/copperplate/threadobj.c     | 7 ++++---
+ 3 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/include/copperplate/threadobj.h b/include/copperplate/threadobj.h
+index c0e2b7d96..3a26598d0 100644
+--- a/include/copperplate/threadobj.h
++++ b/include/copperplate/threadobj.h
+@@ -27,7 +27,7 @@
+ #include <boilerplate/list.h>
+ #include <boilerplate/lock.h>
+ #include <boilerplate/sched.h>
+-#include <cobalt/kernel/sched.h>
++
+ #include <copperplate/clockobj.h>
+ #include <copperplate/heapobj.h>
+ #include <sched.h>
+diff --git a/lib/copperplate/internal.c b/lib/copperplate/internal.c
+index da6f387e8..1cf9b47e9 100644
+--- a/lib/copperplate/internal.c
++++ b/lib/copperplate/internal.c
+@@ -70,8 +70,10 @@ int copperplate_create_thread(struct corethread_attributes *cta,
+ 	return __bt(thread_spawn_epilogue(cta));
+ }
+ 
+-int copperplate_roll_dynamic_priority(pthread_t ptid, xnticks_t deadline)
+-	
++#if 0
++  int copperplate_roll_dynamic_priority(pthread_t ptid, xnticks_t deadline){
++  }
++#endif	
+ 
+ int copperplate_renice_local_thread(pthread_t ptid, int policy,
+ 				    const struct sched_param_ex *param_ex)
+diff --git a/lib/copperplate/threadobj.c b/lib/copperplate/threadobj.c
+index 858f8867f..bca446f29 100644
+--- a/lib/copperplate/threadobj.c
++++ b/lib/copperplate/threadobj.c
+@@ -29,6 +29,7 @@
+ #include <fcntl.h>
+ #include <assert.h>
+ #include <limits.h>
++#include <sched.h>
+ #include "boilerplate/signal.h"
+ #include "boilerplate/atomic.h"
+ #include "boilerplate/lock.h"
+@@ -1664,7 +1665,7 @@ int threadobj_wait_period(unsigned long *overruns_r)
+ 	struct threadobj *current = threadobj_current();
+ 	siginfo_t si;
+ 	int sig;
+-	struct xnsched *sched;
++	//struct xnsched *sched;
+ 
+ 	if (!(current->status & __THREAD_S_PERIODIC))
+ 		return -EWOULDBLOCK;
+@@ -1672,8 +1673,8 @@ int threadobj_wait_period(unsigned long *overruns_r)
+ 	for (;;) {
+ 		current->run_state = __THREAD_S_DELAYED;
+ 		sig = __RT(sigwaitinfo(&sigperiod_set, &si));
+-		if(current->schedparam.sched_u.deadline.sched_relative_deadline != 0)//We have to requeue the xnthread
+-			sched = xnsched_struct(cpumask_first(CPU_MASK_ALL));
++		/*if(current->schedparam.sched_u.deadline.sched_relative_deadline != 0)//We have to requeue the xnthread
++			sched = xnsched_struct(cpumask_first(CPU_MASK_ALL));*/
+ 		current->run_state = __THREAD_S_RUNNING;
+ 		if (sig == SIGPERIOD)
+ 			break;
+-- 
+2.17.1
+

@@ -1,0 +1,3553 @@
+From 371d801a9aa728b09bfbcc25ce5654b36ec51777 Mon Sep 17 00:00:00 2001
+From: Alexy Debus <alexy.debus@eleves.ec-nantes.fr>
+Date: Mon, 3 Jan 2022 23:52:16 +0100
+Subject: [PATCH 1/4] Few modifications for EDH integration :
+
+- Add extra parameters (use_EDH & WCET) for rt_task_spawn_dyna and rt_task_create_dyna
+- Add batt file to gather battery data
+
+TODO:
+Compute EDH alg. in sched.c (in xnsched_pick_next funct)
+---
+ include/alchemy/task.h              |  4 +-
+ include/cobalt/kernel/batt.h        | 21 ++++++++
+ include/cobalt/kernel/schedparam.h  |  3 ++
+ include/cobalt/kernel/thread.h      |  2 +-
+ include/cobalt/uapi/sched.h         |  6 ++-
+ include/mercury/boilerplate/sched.h |  6 ++-
+ kernel/cobalt/batt.c                | 79 +++++++++++++++++++++++++++++
+ kernel/cobalt/init.c                |  8 +++
+ kernel/cobalt/posix/sched.c         | 15 +++++-
+ kernel/cobalt/sched.c               | 49 +++++++++++++++++-
+ lib/alchemy/task.c                  |  6 ++-
+ lib/copperplate/internal.c          |  8 ++-
+ 12 files changed, 194 insertions(+), 13 deletions(-)
+ create mode 100644 include/cobalt/kernel/batt.h
+ create mode 100644 kernel/cobalt/batt.c
+
+diff --git a/include/alchemy/task.h b/include/alchemy/task.h
+index b0fbeaac0..65d168d2d 100644
+--- a/include/alchemy/task.h
++++ b/include/alchemy/task.h
+@@ -105,6 +105,8 @@ CURRENT_DECL(int, rt_task_create_dyna(RT_TASK *task,
+ 				 const char *name,
+ 				 int stksize,
+ 				 xnticks_t next_deadline,
++				 int WCET,
++                                 bool use_EDH,
+ 				 int mode));
+ 
+ int rt_task_delete(RT_TASK *task);
+@@ -122,7 +124,7 @@ CURRENT_DECL(int, rt_task_spawn(RT_TASK *task, const char *name,
+ 				void *arg));
+ 
+ CURRENT_DECL(int, rt_task_spawn_dyna(RT_TASK *task, const char *name,
+-				int stksize, xnticks_t next_deadline, int mode,
++				int stksize, xnticks_t next_deadline,int WCET,bool use_EDH, int mode,
+ 				void (*entry)(void *arg),
+ 				void *arg));
+ 
+diff --git a/include/cobalt/kernel/batt.h b/include/cobalt/kernel/batt.h
+new file mode 100644
+index 000000000..173371333
+--- /dev/null
++++ b/include/cobalt/kernel/batt.h
+@@ -0,0 +1,21 @@
++#if !defined __BATT_H__
++#define __BATT_H__
++
++int batt_init (void);
++int batt_deinit(void);
++
++/* \stuct Msg_battery
++ *
++ * \brief struct Msg_battery
++ *
++ */
++typedef struct {
++    int capacity;
++    int chargenow;
++    int chargefull;
++    bool message_integrity;
++} Msg_battery;
++
++extern Msg_battery battery_read_msg(void *arg);
++
++#endif /* __BATT_H__ */
+diff --git a/include/cobalt/kernel/schedparam.h b/include/cobalt/kernel/schedparam.h
+index f772a920d..68e450301 100644
+--- a/include/cobalt/kernel/schedparam.h
++++ b/include/cobalt/kernel/schedparam.h
+@@ -35,6 +35,9 @@ struct xnsched_weak_param {
+ struct xnsched_rt_param {
+ 	int prio;
+ 	xnticks_t deadline;
++	int WCET;
++        bool useEDH;
++
+ };
+ 
+ struct xnsched_tp_param {
+diff --git a/include/cobalt/kernel/thread.h b/include/cobalt/kernel/thread.h
+index 701be199f..55b154d89 100644
+--- a/include/cobalt/kernel/thread.h
++++ b/include/cobalt/kernel/thread.h
+@@ -123,7 +123,7 @@ struct xnthread {
+ 	int wprio;
+ 
+ 	/**
+-	 * The next deadline, usefull only in EDF scheduling 
++	 * The next deadline, useful only in EDF scheduling 
+ 	 */
+ 
+ 	xnticks_t next_deadline;
+diff --git a/include/cobalt/uapi/sched.h b/include/cobalt/uapi/sched.h
+index 9d3cb8b45..3520e84c2 100644
+--- a/include/cobalt/uapi/sched.h
++++ b/include/cobalt/uapi/sched.h
+@@ -90,9 +90,11 @@ enum {
+ 	sched_quota_set,
+ 	sched_quota_get,
+ };
+-struct __sched_deadline_param {
++struct __sched_dyna_param {
+ 	__u64 sched_absolute_deadline;
+ 	__u64 sched_relative_deadline;
++	int WCET;
++        bool use_EDH;
+ };
+ 
+ struct __sched_config_quota {
+@@ -130,7 +132,7 @@ struct sched_param_ex {
+ 		struct __sched_rr_param rr;
+ 		struct __sched_tp_param tp;
+ 		struct __sched_quota_param quota;
+-		struct __sched_deadline_param deadline;
++		struct __sched_dyna_param dyna;
+ 	} sched_u;
+ };
+ 
+diff --git a/include/mercury/boilerplate/sched.h b/include/mercury/boilerplate/sched.h
+index 51535f6c5..58b40f24a 100644
+--- a/include/mercury/boilerplate/sched.h
++++ b/include/mercury/boilerplate/sched.h
+@@ -25,16 +25,18 @@ struct __sched_rr_param {
+ 	struct timespec __sched_rr_quantum;
+ };
+ 
+-struct __sched_deadline_param {
++struct __sched_dyna_param {
+ 	__u64 sched_absolute_deadline;
+ 	__u64 sched_relative_deadline;
++	int WCET;
++        bool use_EDH;
+ };
+ 
+ struct sched_param_ex {
+ 	int sched_priority;
+ 	union {
+ 		struct __sched_rr_param rr;
+-		struct __sched_deadline_param deadline;
++		struct __sched_dyna_param dyna;
+ 	} sched_u;
+ };
+ 
+diff --git a/kernel/cobalt/batt.c b/kernel/cobalt/batt.c
+new file mode 100644
+index 000000000..0f9b8630d
+--- /dev/null
++++ b/kernel/cobalt/batt.c
+@@ -0,0 +1,79 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/mman.h>
++#include <signal.h>
++#include <unistd.h>
++
++#include <cobalt/kernel/pipe.h>
++
++static RT_PIPE my_pipe;
++
++#define XDDP_PORT 0     /* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
++#define MAX_BATT_READ_MSG_LENGTH 22 //TODO Add extra_size for battery_size + energy_production
++
++Msg_battery battery_read_msg(void *arg)
++{
++  Msg_battery battery_message= {};
++
++  //Non-blocking pipe read using TM_NONBLOCK (use TM_INFINITE to block indefinitely until some data..)
++  if (rt_pipe_read( &my_pipe, buff,MAX_BATT_READ_MSG_LENGTH, TM_NONBLOCK) >= 0 )
++  { 
++      #if 0
++        rt_printf("Reading message from nRT:%s\n",buff);
++      #endif
++      //Process message in struct
++      sscanf((const char*)received_payload.data, "[%d,%d,%d]",
++	(int*)&battery_message.capacity,
++	(int*)&battery_message.chargenow,
++	(int*)&battery_message.chargefull
++	);
++
++        /*TODO ADD:
++        int battery_size;
++        int energy_production;
++        */
++     
++      if (battery_message.capacity >= 0 && 
++        battery_message.chargenow >= 0 && battery_message.chargenow <= 100 &&
++        battery_message.chargenow >= 0 && battery_message.chargenow <= 100)
++      {
++        battery_message.message_integrity = true;
++      }
++
++  }else{
++    //Handle error
++    battery_message.message_integrity = false;
++  }
++
++  return battery_message;
++  
++}
++
++int batt_init (void)
++{ 
++
++  #if 0
++    rt_print_auto_init(1);
++  #endif
++  rt_print_init(4096,str); 
++  
++  rt_pipe_delete(&my_pipe);
++  if ( rt_pipe_create( &my_pipe, "rtp0", P_MINOR_AUTO, 0 ) != 0 )
++  {
++    rt_printf("rt_pipe_create error\n");
++    return 1;
++  }else{
++    rt_printf("RT pipe create OK\n");
++  }
++  
++  return 0;
++}
++
++
++int batt_deinit(void)
++{
++
++  rt_printf("Destroy RT pipe...\n");
++  rt_pipe_delete(&my_pipe);
++
++}
+diff --git a/kernel/cobalt/init.c b/kernel/cobalt/init.c
+index f94943f2d..b54171420 100644
+--- a/kernel/cobalt/init.c
++++ b/kernel/cobalt/init.c
+@@ -29,6 +29,7 @@
+ #include <cobalt/kernel/pipe.h>
+ #include <cobalt/kernel/select.h>
+ #include <cobalt/kernel/vdso.h>
++#include <cobalt/kernel/batt.h>
+ #include <rtdm/fd.h>
+ #include "rtdm/internal.h"
+ #include "posix/internal.h"
+@@ -243,6 +244,11 @@ static int __init xenomai_init(void)
+ 
+ 	rtdm_fd_init();
+ 
++        //Init batt module
++        ret = batt_init();
++        if (ret != 0)
++                goto cleanup_batt;
++
+ 	printk(XENO_INFO "Cobalt v%s %s%s%s%s\n",
+ 	       XENO_VERSION_STRING,
+ 	       boot_debug_notice,
+@@ -264,6 +270,8 @@ cleanup_mach:
+ 	pipeline_cleanup();
+ cleanup_proc:
+ 	xnprocfs_cleanup_tree();
++cleanup_batt:
++        batt_deinit();
+ fail:
+ 	set_realtime_core_state(COBALT_STATE_DISABLED);
+ 	printk(XENO_ERR "init failed, code %d\n", ret);
+diff --git a/kernel/cobalt/posix/sched.c b/kernel/cobalt/posix/sched.c
+index 75ab57ee1..024bc9382 100644
+--- a/kernel/cobalt/posix/sched.c
++++ b/kernel/cobalt/posix/sched.c
+@@ -29,11 +29,18 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ {
+ 	struct xnsched_class *sched_class;
+ 	int prio, policy;
+-	xnticks_t deadline;
+ 	xnticks_t tslice;
++	
++	xnticks_t deadline;
++	int WCET;        
++	bool use_EDH;
+ 
+ 	prio = param_ex->sched_priority;
+-	deadline = param_ex->sched_u.deadline.sched_absolute_deadline;
++        
++	deadline = param_ex->sched_u.dyna.sched_absolute_deadline;
++	WCET     = param_ex->sched_u.dyna.WCET;
++        use_EDH  = param_ex->sched_u.dyna.use_EDH;
++
+ 	tslice = XN_INFINITE;
+ 	policy = u_policy;
+ 
+@@ -55,6 +62,10 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 	}
+ 	param->rt.prio = prio;
+ 
++        if(use_EDH){
++          param->rt.WCET = WCET;
++	  param->rt.use_EDH = use_EDH;
++	}
+ 
+ 	switch (policy) {
+ 	case SCHED_NORMAL:
+diff --git a/kernel/cobalt/sched.c b/kernel/cobalt/sched.c
+index 952c9c642..d338e1f33 100644
+--- a/kernel/cobalt/sched.c
++++ b/kernel/cobalt/sched.c
+@@ -295,6 +295,9 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	struct xnthread *curr = sched->curr;
+ 	struct xnthread *thread;
+ 
++        bool use_EDH = false;
++	int WCET = 0;
++
+ 	if (!xnthread_test_state(curr, XNTHREAD_BLOCK_BITS | XNZOMBIE)) {
+ 		/*
+ 		 * Do not preempt the current thread if it holds the
+@@ -315,6 +318,39 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 		}
+ 	}
+ 
++        /********************************************************/
++
++	struct list_head *q = &sched->rt.runnable;
++	struct xnthread *b_thread;
++
++	if (list_empty(q))
++		goto no_battery;
++
++	list_for_each_entry(b_thread, q, rlink) {
++  	    if (unlikely(b_thread->sched_class == &xnsched_class_dyna)){
++                //Search through EDF thread
++                if (b_thread->use_EDH == true){
++                  use_EDH = true;
++                  goto battery;
++                }
++	    }
++	}
++
++        /******************************************************/
++        battery:
++	  // Access battery data only if one of following task use EDH scheduling class
++          if(use_EDH){
++            Msg_battery my_msg_battery = battery_read_msg();
++        
++            if (my_msg_battery.message_integrity == true){
++   	      rt_printf(
++                "chargenow :%d\ncapacity:%d\n",my_msg_battery.chargenow,my_msg_battery.capacity
++              );      
++  	    }
++          }
++  
++        no_battery:
++
+ 	/*
+ 	 * Find the runnable thread having the highest priority among
+ 	 * all scheduling classes, scanned by decreasing priority.
+@@ -322,6 +358,9 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ #ifdef CONFIG_XENO_OPT_SCHED_CLASSES
+ 	for_each_xnsched_class(p) {
+ 		thread = p->sched_pick(sched);
++
++		//TODO Alexy : Same as below for !CONFIG_XENO_OPT_SCHED_CLASSES
++
+ 		if (thread) {
+ 			set_thread_running(sched, thread);
+ 			return thread;
+@@ -334,6 +373,14 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	if (unlikely(thread == NULL))
+ 		thread = &sched->rootcb;
+ 
++         if (use_EDH){
++           // if we don't have sufficient energy,
++           // need to call the idle task (thread = &sched->rootcb) and wait for the battery to be fill up again
++	   
++	   //TODO EDF computation
++           WCET = thread->WCET;
++         }
++
+ 	set_thread_running(sched, thread);
+ 
+ 	return thread;
+@@ -455,7 +502,7 @@ int xnsched_set_policy(struct xnthread *thread,
+ 	/*
+ 	 * This is the ONLY place where calling xnsched_setparam() is
+ 	 * legit, sane and safe.
+-	 */nt
++	 */
+ 	effective = xnsched_setparam(thread, p);
+ 	if (effective) {
+ 		thread->sched_class = sched_class;
+diff --git a/lib/alchemy/task.c b/lib/alchemy/task.c
+index 51b9d889d..affe06798 100644
+--- a/lib/alchemy/task.c
++++ b/lib/alchemy/task.c
+@@ -361,8 +361,10 @@ static int create_tcb_dyna(struct alchemy_task **tcbp, RT_TASK *task,
+ 	idata.magic = task_magic;
+ 	idata.finalizer = task_finalizer;
+ 	idata.policy = next_deadline ? SCHED_DEADLINE : SCHED_OTHER;
+-	idata.param_ex.sched_u.deadline.sched_absolute_deadline = next_deadline;
+-	idata.param_ex.sched_u.deadline.sched_relative_deadline = next_deadline;
++	
++	idata.param_ex.sched_u.dyna.sched_absolute_deadline = next_deadline;
++	idata.param_ex.sched_u.dyna.sched_relative_deadline = next_deadline;
++	
+ 	ret = threadobj_init(&tcb->thobj, &idata);
+ 	if (ret)
+ 		goto fail_threadinit;
+diff --git a/lib/copperplate/internal.c b/lib/copperplate/internal.c
+index 1cf9b47e9..63e2eae24 100644
+--- a/lib/copperplate/internal.c
++++ b/lib/copperplate/internal.c
+@@ -60,8 +60,12 @@ int copperplate_create_thread(struct corethread_attributes *cta,
+ 	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_INHERIT_SCHED);
+ 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
+ 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
+-	attr_ex.nonstd.sched_param.sched_u.deadline.sched_absolute_deadline = cta->param_ex.sched_u.deadline.sched_absolute_deadline;
+-	attr_ex.nonstd.sched_param.sched_u.deadline.sched_relative_deadline = cta->param_ex.sched_u.deadline.sched_relative_deadline;
++
++	attr_ex.nonstd.sched_param.sched_u.dyna.sched_absolute_deadline = cta->param_ex.sched_u.dyna.sched_absolute_deadline;
++	attr_ex.nonstd.sched_param.sched_u.dyna.sched_relative_deadline = cta->param_ex.sched_u.dyna.sched_relative_deadline;
++	attr_ex.nonstd.sched_param.sched_u.dyna.WCET = cta->param_ex.sched_u.dyna.WCET;
++	attr_ex.nonstd.sched_param.sched_u.dyna.use_EDH = cta->param_ex.sched_u.dyna.use_EDH;
++
+ 	ret = -pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta);
+ 	pthread_attr_destroy_ex(&attr_ex);
+ 	if (ret)
+-- 
+2.17.1
+
+
+From 2ce445f85b3d5c9b569b2092984c9bed9eff7728 Mon Sep 17 00:00:00 2001
+From: Alexy Debus <alexy.debus@eleves.ec-nantes.fr>
+Date: Fri, 14 Jan 2022 00:02:00 +0100
+Subject: [PATCH 2/4] Few modification for EDF integration :
+
+- source code for EDF rules implementation in kernel/cobalt/sched.c (in xnsched_pick_next)
+- batt.c modification to add XDDP driver for rt-nrt communication (need to be reviewed)
+- few correction for xenomai compilation
+
+TODO :
+- batt.c : review source code to use xeno_rtipc driver instead (need to add CONFIG_XENO_DRIVERS_RTIPC_XDDP in kernel config file)
+---
+ include/alchemy/task.h              |   7 +-
+ include/cobalt/kernel/batt.h        |  11 +-
+ include/cobalt/kernel/sched.h       |   2 +-
+ include/cobalt/kernel/schedparam.h  |   7 +-
+ include/cobalt/uapi/sched.h         |  12 +-
+ include/mercury/boilerplate/sched.h |   5 +-
+ kernel/cobalt/Makefile              |   3 +-
+ kernel/cobalt/batt.c                | 723 +++++++++++++++++++++++++---
+ kernel/cobalt/posix/sched.c         |  19 +-
+ kernel/cobalt/sched.c               |  90 +++-
+ lib/alchemy/task.c                  |   6 +-
+ lib/copperplate/internal.c          |   3 +-
+ 12 files changed, 793 insertions(+), 95 deletions(-)
+
+diff --git a/include/alchemy/task.h b/include/alchemy/task.h
+index 65d168d2d..ca08c937b 100644
+--- a/include/alchemy/task.h
++++ b/include/alchemy/task.h
+@@ -105,8 +105,9 @@ CURRENT_DECL(int, rt_task_create_dyna(RT_TASK *task,
+ 				 const char *name,
+ 				 int stksize,
+ 				 xnticks_t next_deadline,
+-				 int WCET,
+-                                 bool use_EDH,
++				 double WCET,
++				 double WCEC,
++                                 dyna_policy policy,
+ 				 int mode));
+ 
+ int rt_task_delete(RT_TASK *task);
+@@ -124,7 +125,7 @@ CURRENT_DECL(int, rt_task_spawn(RT_TASK *task, const char *name,
+ 				void *arg));
+ 
+ CURRENT_DECL(int, rt_task_spawn_dyna(RT_TASK *task, const char *name,
+-				int stksize, xnticks_t next_deadline,int WCET,bool use_EDH, int mode,
++				int stksize, xnticks_t next_deadline,double WCET,double WCEC,dyna_policy policy, int mode,
+ 				void (*entry)(void *arg),
+ 				void *arg));
+ 
+diff --git a/include/cobalt/kernel/batt.h b/include/cobalt/kernel/batt.h
+index 173371333..df1d2d84e 100644
+--- a/include/cobalt/kernel/batt.h
++++ b/include/cobalt/kernel/batt.h
+@@ -1,6 +1,8 @@
+ #if !defined __BATT_H__
+ #define __BATT_H__
+ 
++#include <linux/types.h>
++
+ int batt_init (void);
+ int batt_deinit(void);
+ 
+@@ -13,9 +15,16 @@ typedef struct {
+     int capacity;
+     int chargenow;
+     int chargefull;
++    int battery_size;
++    int energy_production;
+     bool message_integrity;
++
+ } Msg_battery;
+ 
+-extern Msg_battery battery_read_msg(void *arg);
++#define BATTERY_SIZE_MAX_VALUE (100)
++#define EP_MAX_VALUE (100)
++
++
++extern Msg_battery battery_read_msg(void);
+ 
+ #endif /* __BATT_H__ */
+diff --git a/include/cobalt/kernel/sched.h b/include/cobalt/kernel/sched.h
+index f5166517a..8468413cb 100644
+--- a/include/cobalt/kernel/sched.h
++++ b/include/cobalt/kernel/sched.h
+@@ -641,7 +641,7 @@ static inline bool xnsched_setparam(struct xnthread *thread,
+ }
+ 
+ static inline void xnsched_getparam(struct xnthread *thread,
+-				    union xnsched_policy_param *p)
++				     union xnsched_policy_param *p)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+ 
+diff --git a/include/cobalt/kernel/schedparam.h b/include/cobalt/kernel/schedparam.h
+index 68e450301..2312da6e8 100644
+--- a/include/cobalt/kernel/schedparam.h
++++ b/include/cobalt/kernel/schedparam.h
+@@ -19,6 +19,8 @@
+ #ifndef _COBALT_KERNEL_SCHEDPARAM_H
+ #define _COBALT_KERNEL_SCHEDPARAM_H
+ 
++#include <cobalt/uapi/sched.h>
++
+ /**
+  * @addtogroup cobalt_core_sched
+  * @{
+@@ -35,8 +37,9 @@ struct xnsched_weak_param {
+ struct xnsched_rt_param {
+ 	int prio;
+ 	xnticks_t deadline;
+-	int WCET;
+-        bool useEDH;
++	double WCET;
++	double WCEC;
++        dyna_policy policy;
+ 
+ };
+ 
+diff --git a/include/cobalt/uapi/sched.h b/include/cobalt/uapi/sched.h
+index 3520e84c2..4681be4b5 100644
+--- a/include/cobalt/uapi/sched.h
++++ b/include/cobalt/uapi/sched.h
+@@ -90,11 +90,19 @@ enum {
+ 	sched_quota_set,
+ 	sched_quota_get,
+ };
++
++typedef enum{
++  EDF = 0,
++  EDH_ASAP, //As Soon As Possible
++  EDH_ALAP  //As Late As Possible
++}dyna_policy;
++
+ struct __sched_dyna_param {
+ 	__u64 sched_absolute_deadline;
+ 	__u64 sched_relative_deadline;
+-	int WCET;
+-        bool use_EDH;
++	 double WCET;
++	 double WCEC;
++         dyna_policy policy;
+ };
+ 
+ struct __sched_config_quota {
+diff --git a/include/mercury/boilerplate/sched.h b/include/mercury/boilerplate/sched.h
+index 58b40f24a..e6ad3c97b 100644
+--- a/include/mercury/boilerplate/sched.h
++++ b/include/mercury/boilerplate/sched.h
+@@ -28,8 +28,9 @@ struct __sched_rr_param {
+ struct __sched_dyna_param {
+ 	__u64 sched_absolute_deadline;
+ 	__u64 sched_relative_deadline;
+-	int WCET;
+-        bool use_EDH;
++	double WCET;
++	double WCEC;
++        dyna_policy policy;
+ };
+ 
+ struct sched_param_ex {
+diff --git a/kernel/cobalt/Makefile b/kernel/cobalt/Makefile
+index 746cada0a..2c5430da5 100644
+--- a/kernel/cobalt/Makefile
++++ b/kernel/cobalt/Makefile
+@@ -1,6 +1,7 @@
+ obj-$(CONFIG_XENOMAI) += pipeline/ xenomai.o rtdm/ posix/
+ 
+ xenomai-y :=	arith.o 	\
++		batt.o          \
+ 		bufd.o		\
+ 		clock.o		\
+ 		heap.o		\
+@@ -9,7 +10,7 @@ xenomai-y :=	arith.o 	\
+ 		registry.o	\
+ 		sched-idle.o	\
+ 		sched-rt.o	\
+-		sched-dyna.o  \
++		sched-dyna.o    \
+ 		sched.o		\
+ 		select.o	\
+ 		synch.o		\
+diff --git a/kernel/cobalt/batt.c b/kernel/cobalt/batt.c
+index 0f9b8630d..ee0fa39cb 100644
+--- a/kernel/cobalt/batt.c
++++ b/kernel/cobalt/batt.c
+@@ -1,79 +1,686 @@
+-#include <stdio.h>
+-#include <stdlib.h>
+-#include <sys/mman.h>
+-#include <signal.h>
+-#include <unistd.h>
+-
++#include <cobalt/kernel/batt.h>
++#include <cobalt/kernel/assert.h>
++#include <cobalt/kernel/heap.h>
++#include <cobalt/kernel/bufd.h>
+ #include <cobalt/kernel/pipe.h>
+ 
+-static RT_PIPE my_pipe;
++#include <linux/module.h>
++#include <linux/string.h>
++#include <linux/poll.h>
++#include <linux/slab.h>
++#include <linux/time.h>
++
++#include <rtdm/rtdm.h>
++#include <rtdm/compat.h>
++#include <rtdm/driver.h>
++#include <rtdm/ipc.h>
+ 
+ #define XDDP_PORT 0     /* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
+-#define MAX_BATT_READ_MSG_LENGTH 22 //TODO Add extra_size for battery_size + energy_production
++#define MAX_BATT_READ_MSG_LENGTH 27
++
++#define _XDDP_SYNCWAIT  0
++#define _XDDP_ATOMIC    1
++#define _XDDP_BINDING   2
++#define _XDDP_BOUND     3
++#define _XDDP_CONNECTED 4
++
++/******************** STRUCT DEF ***************************/
++
++struct rtipc_protocol;
++
++struct rtipc_private {
++	struct rtipc_protocol *proto;
++	DECLARE_XNSELECT(send_block);
++	DECLARE_XNSELECT(recv_block);
++	void *state;
++};
++
++struct rtipc_protocol {
++	const char *proto_name;
++	int proto_statesz;
++	int (*proto_init)(void);
++	void (*proto_exit)(void);
++	struct {
++		int (*socket)(struct rtdm_fd *fd);
++		void (*close)(struct rtdm_fd *fd);
++		ssize_t (*recvmsg)(struct rtdm_fd *fd,
++				   struct user_msghdr *msg, int flags);
++		ssize_t (*sendmsg)(struct rtdm_fd *fd,
++				   const struct user_msghdr *msg, int flags);
++		ssize_t (*read)(struct rtdm_fd *fd,
++				void *buf, size_t len);
++		ssize_t (*write)(struct rtdm_fd *fd,
++				 const void *buf, size_t len);
++		int (*ioctl)(struct rtdm_fd *fd,
++			     unsigned int request, void *arg);
++		unsigned int (*pollstate)(struct rtdm_fd *fd);
++	} proto_ops;
++};
++
++struct xddp_message {
++	struct xnpipe_mh mh;
++	char data[];
++};
++
++struct xddp_socket {
++	int magic;
++	struct sockaddr_ipc name;
++	struct sockaddr_ipc peer;
++
++	int minor;
++	size_t poolsz;
++	xnhandle_t handle;
++	char label[XNOBJECT_NAME_LEN];
++	struct rtdm_fd *fd;			/* i.e. RTDM socket fd */
++
++	struct xddp_message *buffer;
++	int buffer_port;
++	struct xnheap *bufpool;
++	struct xnheap privpool;
++	size_t fillsz;
++	size_t curbufsz;	/* Current streaming buffer size */
++	u_long status;
++	rtdm_lock_t lock;
++
++	nanosecs_rel_t timeout;	/* connect()/recvmsg() timeout */
++	size_t reqbufsz;	/* Requested streaming buffer size */
++
++	int (*monitor)(struct rtdm_fd *fd, int event, long arg);
++	struct rtipc_private *priv;
++};
++
++#ifdef CONFIG_XENO_OPT_VFILE
++	static char *__xddp_link_target(void *obj)
++	{
++		struct xddp_socket *sk = obj;
++
++		return kasformat("/dev/rtp%d", sk->minor);
++	}
++
++	extern struct xnptree rtipc_ptree;
++
++	static struct xnpnode_link __xddp_pnode = {
++		.node = {
++			.dirname = "xddp",
++			.root = &rtipc_ptree,
++			.ops = &xnregistry_vlink_ops,
++		},
++		.target = __xddp_link_target,
++	};
++#else /* !CONFIG_XENO_OPT_VFILE */
++	static struct xnpnode_link __xddp_pnode = {
++		.node = {
++			.dirname = "xddp",
++		},
++	};
++#endif /* !CONFIG_XENO_OPT_VFILE */
+ 
+-Msg_battery battery_read_msg(void *arg)
++/****************** END STRUCT DEF *************************/
++
++static int batt_bind_socket(struct rtipc_private *priv,struct sockaddr_ipc *sa);
++
++static int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
++		       const void *arg);
++
++static void *__xddp_alloc_handler(size_t size, void *skarg);
++static void  __xddp_output_handler(struct xnpipe_mh *mh, void *skarg);
++
++static int  __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg);
++static void __xddp_free_handler(void *buf, void *skarg);
++static void __xddp_release_handler(void *skarg);
++static int  __xddp_resize_streambuf(struct xddp_socket *sk);
++
++int __xddp_setsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg);
++int __xddp_getsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg);
++
++static struct rtdm_fd *portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
++static struct sockaddr_ipc saddr, *saddrp = &saddr;
++
++Msg_battery battery_read_msg(void)
+ {
+-  Msg_battery battery_message= {};
+-
+-  //Non-blocking pipe read using TM_NONBLOCK (use TM_INFINITE to block indefinitely until some data..)
+-  if (rt_pipe_read( &my_pipe, buff,MAX_BATT_READ_MSG_LENGTH, TM_NONBLOCK) >= 0 )
+-  { 
+-      #if 0
+-        rt_printf("Reading message from nRT:%s\n",buff);
+-      #endif
+-      //Process message in struct
+-      sscanf((const char*)received_payload.data, "[%d,%d,%d]",
+-	(int*)&battery_message.capacity,
+-	(int*)&battery_message.chargenow,
+-	(int*)&battery_message.chargefull
+-	);
++	
++    Msg_battery battery_message= {};
++    struct xnpipe_mh *mh;
++    struct xddp_message *mbuf = NULL;	
+ 
+-        /*TODO ADD:
+-        int battery_size;
+-        int energy_production;
+-        */
++	int ret = 0;
++	ret = xnpipe_recv(saddrp->sipc_port,&mh,RTDM_TIMEOUT_NONE); 
+      
+-      if (battery_message.capacity >= 0 && 
+-        battery_message.chargenow >= 0 && battery_message.chargenow <= 100 &&
+-        battery_message.chargenow >= 0 && battery_message.chargenow <= 100)
+-      {
+-        battery_message.message_integrity = true;
+-      }
+-
+-  }else{
+-    //Handle error
+-    battery_message.message_integrity = false;
+-  }
+-
+-  return battery_message;
+-  
++    if(ret > MAX_BATT_READ_MSG_LENGTH){
++      battery_message.message_integrity = false;
++    }
++
++	if (ret >= 0 )
++	{ 
++        
++	    mbuf = container_of(mh, struct xddp_message, mh);
++
++	    //Process message in struct
++	    sscanf((const char*)mbuf->data, "[%d,%d,%d,%d,%d]",
++			  (int*)&battery_message.capacity,
++			  (int*)&battery_message.chargenow,
++			  (int*)&battery_message.chargefull,
++				(int*)&battery_message.battery_size,
++	      (int*)&battery_message.energy_production
++	);
++	   
++	    if (battery_message.capacity >= 0 && 
++	      battery_message.chargenow >= 0 && battery_message.chargenow <= 100 &&
++	      battery_message.chargenow >= 0 && battery_message.chargenow <= 100 &&
++	battery_message.battery_size >= 0 && battery_message.chargenow <= BATTERY_SIZE_MAX_VALUE &&
++	      battery_message.energy_production >= 0 && battery_message.energy_production <= EP_MAX_VALUE
++	       )
++	    {
++	      battery_message.message_integrity = true;
++	    }
++
++	}else{
++	  //Handle error
++	  battery_message.message_integrity = false;
++	}
++
++    return battery_message;
+ }
+ 
+-int batt_init (void)
+-{ 
++int batt_init (void){ 	
++
++    int ret  = 0;
++    
++    struct rtdm_fd *fd; //TODO
++    const struct _rtdm_setsockaddr_args *arg; //TODO : https://xenomai.org/documentation/xenomai-3/html/xeno3prm/xddp-stream_8c-example.html
++
++    //TODO Set buffsize to 1024 bytes
++
++    struct rtipc_private *priv = rtdm_fd_to_private(fd);
+ 
+-  #if 0
+-    rt_print_auto_init(1);
+-  #endif
+-  rt_print_init(4096,str); 
++    ret = rtipc_get_sockaddr(fd, &saddrp, arg);
++
++    if (ret)
++      return ret;
++
++    if (saddrp == NULL )
++      return -EFAULT;
++
++    #ifdef USE_AUTO_SELECT
++      //Nothing to do
++    #else
++      saddrp->sipc_port = XDDP_PORT;
++    #endif
++    saddrp->sipc_family = AF_RTIPC;    
++
++    ret = batt_bind_socket(priv,saddrp);
++
++    if(ret < 0)
++    {
++      printk(XENO_INFO "xddp_pipe_create error\n");
++      return 1;
++    }else{
++      printk(XENO_INFO "XDDP pipe create OK\n");
++    }
+   
+-  rt_pipe_delete(&my_pipe);
+-  if ( rt_pipe_create( &my_pipe, "rtp0", P_MINOR_AUTO, 0 ) != 0 )
+-  {
+-    rt_printf("rt_pipe_create error\n");
+-    return 1;
+-  }else{
+-    rt_printf("RT pipe create OK\n");
+-  }
++  return 0;
++}
++
++int batt_bind_socket(struct rtipc_private *priv,struct sockaddr_ipc *sa){
++	struct xddp_socket *sk = priv->state;
++	struct xnpipe_operations ops;
++	rtdm_lockctx_t s;
++	size_t poolsz;
++	void *poolmem;
++	int ret = 0;
++
++	if (sa->sipc_family != AF_RTIPC)
++		return -EINVAL;
++
++	/* Allow special port -1 for auto-selection. */
++	if (sa->sipc_port < -1 ||
++	    sa->sipc_port >= CONFIG_XENO_OPT_PIPE_NRDEV)
++		return -EINVAL;
++
++	cobalt_atomic_enter(s);
++	if (test_bit(_XDDP_BOUND, &sk->status) ||
++	    __test_and_set_bit(_XDDP_BINDING, &sk->status))
++		ret = -EADDRINUSE;
++	cobalt_atomic_leave(s);
++	if (ret)
++		return ret;
++
++	poolsz = sk->poolsz;
++	if (poolsz > 0) {
++		poolsz = PAGE_ALIGN(poolsz);
++		poolsz += PAGE_ALIGN(sk->reqbufsz);
++		poolmem = xnheap_vmalloc(poolsz);
++		if (poolmem == NULL) {
++			ret = -ENOMEM;
++			goto fail;
++		}
++
++		ret = xnheap_init(&sk->privpool, poolmem, poolsz);
++		if (ret) {
++			xnheap_vfree(poolmem);
++			goto fail;
++		}
++
++		sk->bufpool = &sk->privpool;
++	} else
++		sk->bufpool = &cobalt_heap;
++
++	if (sk->reqbufsz > 0) {
++		sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);
++		if (sk->buffer == NULL) {
++			ret = -ENOMEM;
++			goto fail_freeheap;
++		}
++		sk->curbufsz = sk->reqbufsz;
++	}
++
++	sk->fd = rtdm_private_to_fd(priv);
++
++	ops.output = &__xddp_output_handler;
++	ops.input = &__xddp_input_handler;
++	ops.alloc_ibuf = &__xddp_alloc_handler;
++	ops.free_ibuf = &__xddp_free_handler;
++	ops.free_obuf = &__xddp_free_handler;
++	ops.release = &__xddp_release_handler;
++
++	// sa->sipc_port = -1 to find and pick the next free minor
++	ret = xnpipe_connect(sa->sipc_port, &ops, sk); 
++	if (ret < 0) {
++		if (ret == -EBUSY)
++			ret = -EADDRINUSE;
++	fail_freeheap:
++		if (poolsz > 0) {
++			xnheap_destroy(&sk->privpool);
++			xnheap_vfree(poolmem);
++		}
++	fail:
++		clear_bit(_XDDP_BINDING, &sk->status);
++		return ret;
++	}
++
++	sk->minor = ret;
++	sa->sipc_port = ret;
++	sk->name = *sa;
++
++	/* Set default destination if unset at binding time. */
++	if (sk->peer.sipc_port < 0)
++		sk->peer = *sa;
++
++	if (poolsz > 0)
++		xnheap_set_name(sk->bufpool, "xddp-pool@%d", sa->sipc_port);
++
++	if (*sk->label) {
++		ret = xnregistry_enter(sk->label, sk, &sk->handle,
++				       &__xddp_pnode.node);
++		if (ret) {
++			/* The release handler will cleanup the pool for us. */
++			xnpipe_disconnect(sk->minor);
++			return ret;
++		}
++	}
++
++	cobalt_atomic_enter(s);
++	portmap[sk->minor] = rtdm_private_to_fd(priv);
++	__clear_bit(_XDDP_BINDING, &sk->status);
++	__set_bit(_XDDP_BOUND, &sk->status);
++	if (xnselect_signal(&priv->send_block, POLLOUT))
++		xnsched_run();
++	cobalt_atomic_leave(s);
++
++        //Here, binding ok at addr /dev/rtp 'sk->minor'
++	return 0;	
++
++}
++
++int batt_deinit(void){
++
++  xnpipe_disconnect(saddrp->sipc_port);
++  printk(XENO_INFO "Destroy XDDP pipe...\n");
+   
+   return 0;
+ }
+ 
++/************************** RTIPC *************************************/
++
++int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
++		       const void *arg){
++
++	const struct _rtdm_setsockaddr_args *p;
++	struct _rtdm_setsockaddr_args sreq;
++	int ret;
++
++	if (!rtdm_fd_is_user(fd)) {
++		p = arg;
++		if (p->addrlen > 0) {
++			if (p->addrlen != sizeof(**saddrp))
++				return -EINVAL;
++			memcpy(*saddrp, p->addr, sizeof(**saddrp));
++		} else {
++			if (p->addr)
++				return -EINVAL;
++			*saddrp = NULL;
++		}
++		return 0;
++	}
++
++#ifdef CONFIG_XENO_ARCH_SYS3264
++	if (rtdm_fd_is_compat(fd)) {
++		struct compat_rtdm_setsockaddr_args csreq;
++		ret = rtdm_safe_copy_from_user(fd, &csreq, arg, sizeof(csreq));
++		if (ret)
++			return ret;
++		if (csreq.addrlen > 0) {
++			if (csreq.addrlen != sizeof(**saddrp))
++				return -EINVAL;
++			return rtdm_safe_copy_from_user(fd, *saddrp,
++							compat_ptr(csreq.addr),
++							sizeof(**saddrp));
++		}
++		if (csreq.addr)
++			return -EINVAL;
++
++		*saddrp = NULL;
++
++		return 0;
++	}
++#endif
++
++	ret = rtdm_safe_copy_from_user(fd, &sreq, arg, sizeof(sreq));
++	if (ret)
++		return ret;
++	if (sreq.addrlen > 0) {
++		if (sreq.addrlen != sizeof(**saddrp))
++			return -EINVAL;
++		return rtdm_safe_copy_from_user(fd, *saddrp,
++						sreq.addr, sizeof(**saddrp));
++	}
++	if (sreq.addr)
++		return -EINVAL;
++
++	*saddrp = NULL;
++
++	return 0;
++}
++
++/************************** XDDP *************************************/
++
++void __xddp_free_handler(void *buf, void *skarg){ /* nklock free */
++
++	struct xddp_socket *sk = skarg;
++	rtdm_lockctx_t s;
++
++	if (buf != sk->buffer) {
++		xnheap_free(sk->bufpool, buf);
++		return;
++	}
++
++	/* Reset the streaming buffer. */
++
++	rtdm_lock_get_irqsave(&sk->lock, s);
++
++	sk->fillsz = 0;
++	sk->buffer_port = -1;
++	__clear_bit(_XDDP_SYNCWAIT, &sk->status);
++	__clear_bit(_XDDP_ATOMIC, &sk->status);
++
++	/*
++	 * If a XDDP_BUFSZ request is pending, resize the streaming
++	 * buffer on-the-fly.
++	 */
++	if (unlikely(sk->curbufsz != sk->reqbufsz))
++		__xddp_resize_streambuf(sk);
++
++	rtdm_lock_put_irqrestore(&sk->lock, s);
++}
++
++int __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg){ /* nklock held */
++
++	struct xddp_socket *sk = skarg;
++
++	if (sk->monitor) {
++		if (retval == 0)
++			/* Callee may alter the return value passed to userland. */
++			retval = sk->monitor(sk->fd, XDDP_EVTIN, xnpipe_m_size(mh));
++		else if (retval == -EPIPE && mh == NULL)
++			sk->monitor(sk->fd, XDDP_EVTDOWN, 0);
++	}
++
++	if (retval == 0 &&
++	    (__xnpipe_pollstate(sk->minor) & POLLIN) != 0 &&
++	    xnselect_signal(&sk->priv->recv_block, POLLIN))
++		xnsched_run();
++
++	return retval;
++}
++
++void __xddp_output_handler(struct xnpipe_mh *mh, void *skarg){ /* nklock held */
++
++	struct xddp_socket *sk = skarg;
++
++	if (sk->monitor)
++		sk->monitor(sk->fd, XDDP_EVTOUT, xnpipe_m_size(mh));
++}
++
++void *__xddp_alloc_handler(size_t size, void *skarg){ /* nklock free */
+ 
+-int batt_deinit(void)
++	struct xddp_socket *sk = skarg;
++	void *buf;
++
++	/* Try to allocate memory for the incoming message. */
++	buf = xnheap_alloc(sk->bufpool, size);
++	if (unlikely(buf == NULL)) {
++		if (sk->monitor)
++			sk->monitor(sk->fd, XDDP_EVTNOBUF, size);
++		if (size > xnheap_get_size(sk->bufpool))
++			buf = (void *)-1; /* Will never succeed. */
++	}
++
++	return buf;
++}
++
++void __xddp_release_handler(void *skarg){ /* nklock free */
++
++	struct xddp_socket *sk = skarg;
++	void *poolmem;
++	u32 poolsz;
++
++	if (sk->bufpool == &sk->privpool) {
++		poolmem = xnheap_get_membase(&sk->privpool);
++		poolsz = xnheap_get_size(&sk->privpool);
++		xnheap_destroy(&sk->privpool);
++		xnheap_vfree(poolmem);
++	} else if (sk->buffer)
++		xnfree(sk->buffer);
++
++	kfree(sk);
++}
++
++int __xddp_resize_streambuf(struct xddp_socket *sk){ /* sk->lock held */
++	if (sk->buffer)
++		xnheap_free(sk->bufpool, sk->buffer);
++
++	if (sk->reqbufsz == 0) {
++		sk->buffer = NULL;
++		sk->curbufsz = 0;
++		return 0;
++	}
++
++	sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);
++	if (sk->buffer == NULL) {
++		sk->curbufsz = 0;
++		return -ENOMEM;
++	}
++
++	sk->curbufsz = sk->reqbufsz;
++
++	return 0;
++}
++
++int __xddp_setsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg)
+ {
++	int (*monitor)(struct rtdm_fd *fd, int event, long arg);
++	struct _rtdm_setsockopt_args sopt;
++	struct rtipc_port_label plabel;
++	struct __kernel_old_timeval tv;
++	rtdm_lockctx_t s;
++	size_t len;
++	int ret;
++
++	ret = rtipc_get_sockoptin(fd, &sopt, arg);
++	if (ret)
++		return ret;
++
++	if (sopt.level == SOL_SOCKET) {
++		switch (sopt.optname) {
++
++		case SO_RCVTIMEO_OLD:
++			ret = rtipc_get_timeval(fd, &tv, sopt.optval, sopt.optlen);
++			if (ret)
++				return ret;
++			sk->timeout = rtipc_timeval_to_ns(&tv);
++			break;
++
++		default:
++			ret = -EINVAL;
++		}
++
++		return ret;
++	}
++
++	if (sopt.level != SOL_XDDP)
++		return -ENOPROTOOPT;
++
++	switch (sopt.optname) {
++
++	case XDDP_BUFSZ:
++		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
++		if (ret)
++			return ret;
++		if (len > 0) {
++			len += sizeof(struct xddp_message);
++			if (sk->bufpool &&
++			    len > xnheap_get_size(sk->bufpool)) {
++				return -EINVAL;
++			}
++		}
++		rtdm_lock_get_irqsave(&sk->lock, s);
++		sk->reqbufsz = len;
++		if (len != sk->curbufsz &&
++		    !test_bit(_XDDP_SYNCWAIT, &sk->status) &&
++		    test_bit(_XDDP_BOUND, &sk->status))
++			ret = __xddp_resize_streambuf(sk);
++		rtdm_lock_put_irqrestore(&sk->lock, s);
++		break;
++
++	case XDDP_POOLSZ:
++		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
++		if (ret)
++			return ret;
++		if (len == 0)
++			return -EINVAL;
++		cobalt_atomic_enter(s);
++		if (test_bit(_XDDP_BOUND, &sk->status) ||
++		    test_bit(_XDDP_BINDING, &sk->status))
++			ret = -EALREADY;
++		else
++			sk->poolsz = len;
++		cobalt_atomic_leave(s);
++		break;
++
++	case XDDP_MONITOR:
++		/* Monitoring is available from kernel-space only. */
++		if (rtdm_fd_is_user(fd))
++			return -EPERM;
++		if (sopt.optlen != sizeof(monitor))
++			return -EINVAL;
++		if (rtipc_get_arg(NULL, &monitor, sopt.optval, sizeof(monitor)))
++			return -EFAULT;
++		sk->monitor = monitor;
++		break;
+ 
+-  rt_printf("Destroy RT pipe...\n");
+-  rt_pipe_delete(&my_pipe);
++	case XDDP_LABEL:
++		if (sopt.optlen < sizeof(plabel))
++			return -EINVAL;
++		if (rtipc_get_arg(fd, &plabel, sopt.optval, sizeof(plabel)))
++			return -EFAULT;
++		cobalt_atomic_enter(s);
++		if (test_bit(_XDDP_BOUND, &sk->status) ||
++		    test_bit(_XDDP_BINDING, &sk->status))
++			ret = -EALREADY;
++		else {
++			strcpy(sk->label, plabel.label);
++			sk->label[XNOBJECT_NAME_LEN-1] = 0;
++		}
++		cobalt_atomic_leave(s);
++		break;
+ 
++	default:
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++int __xddp_getsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg)
++{
++	struct _rtdm_getsockopt_args sopt;
++	struct rtipc_port_label plabel;
++	struct __kernel_old_timeval tv;
++	rtdm_lockctx_t s;
++	socklen_t len;
++	int ret;
++
++	ret = rtipc_get_sockoptout(fd, &sopt, arg);
++	if (ret)
++		return ret;
++
++	if (rtipc_get_arg(fd, &len, sopt.optlen, sizeof(len)))
++		return -EFAULT;
++
++	if (sopt.level == SOL_SOCKET) {
++		switch (sopt.optname) {
++
++		case SO_RCVTIMEO_OLD:
++			rtipc_ns_to_timeval(&tv, sk->timeout);
++			ret = rtipc_put_timeval(fd, sopt.optval, &tv, len);
++			if (ret)
++				return ret;
++			break;
++
++		default:
++			ret = -EINVAL;
++		}
++
++		return ret;
++	}
++
++	if (sopt.level != SOL_XDDP)
++		return -ENOPROTOOPT;
++
++	switch (sopt.optname) {
++
++	case XDDP_LABEL:
++		if (len < sizeof(plabel))
++			return -EINVAL;
++		cobalt_atomic_enter(s);
++		strcpy(plabel.label, sk->label);
++		cobalt_atomic_leave(s);
++		if (rtipc_put_arg(fd, sopt.optval, &plabel, sizeof(plabel)))
++			return -EFAULT;
++		break;
++
++	default:
++		ret = -EINVAL;
++	}
++
++	return ret;
+ }
++
+diff --git a/kernel/cobalt/posix/sched.c b/kernel/cobalt/posix/sched.c
+index 024bc9382..3b3af918f 100644
+--- a/kernel/cobalt/posix/sched.c
++++ b/kernel/cobalt/posix/sched.c
+@@ -32,14 +32,16 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 	xnticks_t tslice;
+ 	
+ 	xnticks_t deadline;
+-	int WCET;        
+-	bool use_EDH;
++	double WCET;
++	double WCEC;
++        dyna_policy dynamic_policy;
+ 
+ 	prio = param_ex->sched_priority;
+         
+-	deadline = param_ex->sched_u.dyna.sched_absolute_deadline;
+-	WCET     = param_ex->sched_u.dyna.WCET;
+-        use_EDH  = param_ex->sched_u.dyna.use_EDH;
++	deadline        = param_ex->sched_u.dyna.sched_absolute_deadline;
++	WCET            = param_ex->sched_u.dyna.WCET;
++        WCEC            = param_ex->sched_u.dyna.WCEC;
++        dynamic_policy  = param_ex->sched_u.dyna.policy;
+ 
+ 	tslice = XN_INFINITE;
+ 	policy = u_policy;
+@@ -62,9 +64,10 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 	}
+ 	param->rt.prio = prio;
+ 
+-        if(use_EDH){
+-          param->rt.WCET = WCET;
+-	  param->rt.use_EDH = use_EDH;
++        if(dynamic_policy == EDH_ASAP || dynamic_policy == EDH_ALAP){
++          param->rt.WCET   = WCET;
++	  param->rt.WCEC   = WCEC;
++	  param->rt.policy = dynamic_policy;
+ 	}
+ 
+ 	switch (policy) {
+diff --git a/kernel/cobalt/sched.c b/kernel/cobalt/sched.c
+index d338e1f33..62b49740c 100644
+--- a/kernel/cobalt/sched.c
++++ b/kernel/cobalt/sched.c
+@@ -26,6 +26,7 @@
+ #include <cobalt/kernel/intr.h>
+ #include <cobalt/kernel/heap.h>
+ #include <cobalt/kernel/arith.h>
++#include <cobalt/kernel/batt.h>
+ #include <cobalt/uapi/signal.h>
+ #include <pipeline/sched.h>
+ #define CREATE_TRACE_POINTS
+@@ -294,9 +295,27 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	struct xnsched_class *p __maybe_unused;
+ 	struct xnthread *curr = sched->curr;
+ 	struct xnthread *thread;
++	
++	/*EDH Param */	
++        Msg_battery my_msg_battery = {0,0,0,0,0,false};
+ 
+-        bool use_EDH = false;
+-	int WCET = 0;
++        bool use_EDH      = false;
++	bool is_proc_idle = false;
++
++	double WCEC = 0;
++	double WCET = 0;
++
++	int total_proc_demand   = 0; //Processor demand at time T
++	double total_WCET_unfinish = 0; //Remaining execution time for unfinished tasks
++
++	int slack_time      = 0;
++	int slack_energy    = 0;
++	int energy_demand   = 0;
++	int energy_produced = 0;
++
++	int total_energy    = 0;
++
++	/* End EDH Param */
+ 
+ 	if (!xnthread_test_state(curr, XNTHREAD_BLOCK_BITS | XNZOMBIE)) {
+ 		/*
+@@ -322,6 +341,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 
+ 	struct list_head *q = &sched->rt.runnable;
+ 	struct xnthread *b_thread;
++        union xnsched_policy_param param;
+ 
+ 	if (list_empty(q))
+ 		goto no_battery;
+@@ -329,7 +349,10 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	list_for_each_entry(b_thread, q, rlink) {
+   	    if (unlikely(b_thread->sched_class == &xnsched_class_dyna)){
+                 //Search through EDF thread
+-                if (b_thread->use_EDH == true){
++                b_thread->sched_class->sched_getparam(b_thread, &param);
++
++
++                if (param.rt.policy == EDH_ASAP || param.rt.policy == EDH_ALAP){
+                   use_EDH = true;
+                   goto battery;
+                 }
+@@ -337,14 +360,27 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	}
+ 
+         /******************************************************/
+-        battery:
++        battery: //Consider only one battery
+ 	  // Access battery data only if one of following task use EDH scheduling class
+           if(use_EDH){
+-            Msg_battery my_msg_battery = battery_read_msg();
++            my_msg_battery = battery_read_msg();
+         
+             if (my_msg_battery.message_integrity == true){
+-   	      rt_printf(
++   	      printk(XENO_INFO
+                 "chargenow :%d\ncapacity:%d\n",my_msg_battery.chargenow,my_msg_battery.capacity
++	      
++              /*TODO Compute :
++		
++		total_proc_demand 
++		total_WCET_unfinish
++		energy_demand				
++      		energy_produced //In [ti,deadline]		
++
++		slack_time
++		slack_energy
++		total_energy
++	      */	
++		
+               );      
+   	    }
+           }
+@@ -359,7 +395,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	for_each_xnsched_class(p) {
+ 		thread = p->sched_pick(sched);
+ 
+-		//TODO Alexy : Same as below for !CONFIG_XENO_OPT_SCHED_CLASSES
++		//Alexy : Same as below for !CONFIG_XENO_OPT_SCHED_CLASSES
+ 
+ 		if (thread) {
+ 			set_thread_running(sched, thread);
+@@ -369,16 +405,42 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 
+ 	return NULL; /* Never executed because of the idle class. */
+ #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
+-	thread = xnsched_rt_pick(sched);
+-	if (unlikely(thread == NULL))
+-		thread = &sched->rootcb;
+ 
+          if (use_EDH){
+-           // if we don't have sufficient energy,
+-           // need to call the idle task (thread = &sched->rootcb) and wait for the battery to be fill up again
++	   thread = &sched->rootcb;
+ 	   
+-	   //TODO EDF computation
+-           WCET = thread->WCET;
++           union xnsched_policy_param dyna_param;   
++           thread->sched_class->sched_getparam(b_thread, &dyna_param);
++
++	   //ED-H Rule n°3:	   
++           if(total_energy == 0 || slack_energy == 0){
++             //Proc. IDLE
++           }
++             
++	   //ED-H Rule n°4: 
++           if(total_energy == my_msg_battery.capacity || slack_time == 0){
++             thread = xnsched_rt_pick(sched);
++               
++             if (unlikely(thread == NULL))
++	       thread = &sched->rootcb;
++           }
++
++	   //ED-H Rule n°5
++	   if(total_energy >0 && total_energy < my_msg_battery.capacity 
++	      && slack_time > 0 && slack_energy > 0){     
++              if(dyna_param.rt.policy == EDH_ALAP){
++                thread = xnsched_rt_pick(sched);
++               
++                if (unlikely(thread == NULL))
++	          thread = &sched->rootcb;
++      
++	      }//else //ASAP => Proc. IDLE
++           }
++		
++         }else{
++           thread = xnsched_rt_pick(sched);
++	   if (unlikely(thread == NULL))
++	     thread = &sched->rootcb;
+          }
+ 
+ 	set_thread_running(sched, thread);
+diff --git a/lib/alchemy/task.c b/lib/alchemy/task.c
+index affe06798..01b1e172d 100644
+--- a/lib/alchemy/task.c
++++ b/lib/alchemy/task.c
+@@ -539,10 +539,12 @@ out:
+ //next_deadline est ici relatif
+ #ifndef DOXYGEN_CPP
+ CURRENT_IMPL(int, rt_task_create_dyna, (RT_TASK *task, const char *name,
+-				   int stksize, xnticks_t next_deadline, int mode))
++				   int stksize, xnticks_t next_deadline,double WCET,double WCEC,
++                                   dyna_policy policy, int mode))
+ #else
+ int rt_task_create_dyna(RT_TASK *task, const char *name,
+-		   int stksize, xnticks_t next_deadline, int mode)
++		   int stksize, xnticks_t next_deadline,double WCET,double WCEC,
++                   dyna_policy policy, int mode)
+ #endif
+ {
+ 	struct corethread_attributes cta;
+diff --git a/lib/copperplate/internal.c b/lib/copperplate/internal.c
+index 63e2eae24..2424c727e 100644
+--- a/lib/copperplate/internal.c
++++ b/lib/copperplate/internal.c
+@@ -64,7 +64,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
+ 	attr_ex.nonstd.sched_param.sched_u.dyna.sched_absolute_deadline = cta->param_ex.sched_u.dyna.sched_absolute_deadline;
+ 	attr_ex.nonstd.sched_param.sched_u.dyna.sched_relative_deadline = cta->param_ex.sched_u.dyna.sched_relative_deadline;
+ 	attr_ex.nonstd.sched_param.sched_u.dyna.WCET = cta->param_ex.sched_u.dyna.WCET;
+-	attr_ex.nonstd.sched_param.sched_u.dyna.use_EDH = cta->param_ex.sched_u.dyna.use_EDH;
++	attr_ex.nonstd.sched_param.sched_u.dyna.WCEC = cta->param_ex.sched_u.dyna.WCEC;
++	attr_ex.nonstd.sched_param.sched_u.dyna.policy = cta->param_ex.sched_u.dyna.policy;
+ 
+ 	ret = -pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta);
+ 	pthread_attr_destroy_ex(&attr_ex);
+-- 
+2.17.1
+
+
+From f339c141faf314a96725899d3941c65e162457d1 Mon Sep 17 00:00:00 2001
+From: Alexy Debus <alexy.debus@eleves.ec-nantes.fr>
+Date: Fri, 14 Jan 2022 00:02:00 +0100
+Subject: [PATCH 3/4] Few modification for EDH integration :
+
+- source code for EDH rules implementation in kernel/cobalt/sched.c (in xnsched_pick_next)
+- batt.c modification to add XDDP driver for rt-nrt communication (need to be reviewed)
+- few correction for xenomai compilation
+
+TODO :
+- batt.c : review source code to use xeno_rtipc driver instead (need to add CONFIG_XENO_DRIVERS_RTIPC_XDDP in kernel config file)
+---
+ include/alchemy/task.h              |   7 +-
+ include/cobalt/kernel/batt.h        |  11 +-
+ include/cobalt/kernel/sched.h       |   2 +-
+ include/cobalt/kernel/schedparam.h  |   7 +-
+ include/cobalt/uapi/sched.h         |  12 +-
+ include/mercury/boilerplate/sched.h |   5 +-
+ kernel/cobalt/Makefile              |   3 +-
+ kernel/cobalt/batt.c                | 723 +++++++++++++++++++++++++---
+ kernel/cobalt/posix/sched.c         |  19 +-
+ kernel/cobalt/sched.c               |  90 +++-
+ lib/alchemy/task.c                  |   6 +-
+ lib/copperplate/internal.c          |   3 +-
+ 12 files changed, 793 insertions(+), 95 deletions(-)
+
+diff --git a/include/alchemy/task.h b/include/alchemy/task.h
+index 65d168d2d..ca08c937b 100644
+--- a/include/alchemy/task.h
++++ b/include/alchemy/task.h
+@@ -105,8 +105,9 @@ CURRENT_DECL(int, rt_task_create_dyna(RT_TASK *task,
+ 				 const char *name,
+ 				 int stksize,
+ 				 xnticks_t next_deadline,
+-				 int WCET,
+-                                 bool use_EDH,
++				 double WCET,
++				 double WCEC,
++                                 dyna_policy policy,
+ 				 int mode));
+ 
+ int rt_task_delete(RT_TASK *task);
+@@ -124,7 +125,7 @@ CURRENT_DECL(int, rt_task_spawn(RT_TASK *task, const char *name,
+ 				void *arg));
+ 
+ CURRENT_DECL(int, rt_task_spawn_dyna(RT_TASK *task, const char *name,
+-				int stksize, xnticks_t next_deadline,int WCET,bool use_EDH, int mode,
++				int stksize, xnticks_t next_deadline,double WCET,double WCEC,dyna_policy policy, int mode,
+ 				void (*entry)(void *arg),
+ 				void *arg));
+ 
+diff --git a/include/cobalt/kernel/batt.h b/include/cobalt/kernel/batt.h
+index 173371333..df1d2d84e 100644
+--- a/include/cobalt/kernel/batt.h
++++ b/include/cobalt/kernel/batt.h
+@@ -1,6 +1,8 @@
+ #if !defined __BATT_H__
+ #define __BATT_H__
+ 
++#include <linux/types.h>
++
+ int batt_init (void);
+ int batt_deinit(void);
+ 
+@@ -13,9 +15,16 @@ typedef struct {
+     int capacity;
+     int chargenow;
+     int chargefull;
++    int battery_size;
++    int energy_production;
+     bool message_integrity;
++
+ } Msg_battery;
+ 
+-extern Msg_battery battery_read_msg(void *arg);
++#define BATTERY_SIZE_MAX_VALUE (100)
++#define EP_MAX_VALUE (100)
++
++
++extern Msg_battery battery_read_msg(void);
+ 
+ #endif /* __BATT_H__ */
+diff --git a/include/cobalt/kernel/sched.h b/include/cobalt/kernel/sched.h
+index f5166517a..8468413cb 100644
+--- a/include/cobalt/kernel/sched.h
++++ b/include/cobalt/kernel/sched.h
+@@ -641,7 +641,7 @@ static inline bool xnsched_setparam(struct xnthread *thread,
+ }
+ 
+ static inline void xnsched_getparam(struct xnthread *thread,
+-				    union xnsched_policy_param *p)
++				     union xnsched_policy_param *p)
+ {
+ 	struct xnsched_class *sched_class = thread->sched_class;
+ 
+diff --git a/include/cobalt/kernel/schedparam.h b/include/cobalt/kernel/schedparam.h
+index 68e450301..2312da6e8 100644
+--- a/include/cobalt/kernel/schedparam.h
++++ b/include/cobalt/kernel/schedparam.h
+@@ -19,6 +19,8 @@
+ #ifndef _COBALT_KERNEL_SCHEDPARAM_H
+ #define _COBALT_KERNEL_SCHEDPARAM_H
+ 
++#include <cobalt/uapi/sched.h>
++
+ /**
+  * @addtogroup cobalt_core_sched
+  * @{
+@@ -35,8 +37,9 @@ struct xnsched_weak_param {
+ struct xnsched_rt_param {
+ 	int prio;
+ 	xnticks_t deadline;
+-	int WCET;
+-        bool useEDH;
++	double WCET;
++	double WCEC;
++        dyna_policy policy;
+ 
+ };
+ 
+diff --git a/include/cobalt/uapi/sched.h b/include/cobalt/uapi/sched.h
+index 3520e84c2..4681be4b5 100644
+--- a/include/cobalt/uapi/sched.h
++++ b/include/cobalt/uapi/sched.h
+@@ -90,11 +90,19 @@ enum {
+ 	sched_quota_set,
+ 	sched_quota_get,
+ };
++
++typedef enum{
++  EDF = 0,
++  EDH_ASAP, //As Soon As Possible
++  EDH_ALAP  //As Late As Possible
++}dyna_policy;
++
+ struct __sched_dyna_param {
+ 	__u64 sched_absolute_deadline;
+ 	__u64 sched_relative_deadline;
+-	int WCET;
+-        bool use_EDH;
++	 double WCET;
++	 double WCEC;
++         dyna_policy policy;
+ };
+ 
+ struct __sched_config_quota {
+diff --git a/include/mercury/boilerplate/sched.h b/include/mercury/boilerplate/sched.h
+index 58b40f24a..e6ad3c97b 100644
+--- a/include/mercury/boilerplate/sched.h
++++ b/include/mercury/boilerplate/sched.h
+@@ -28,8 +28,9 @@ struct __sched_rr_param {
+ struct __sched_dyna_param {
+ 	__u64 sched_absolute_deadline;
+ 	__u64 sched_relative_deadline;
+-	int WCET;
+-        bool use_EDH;
++	double WCET;
++	double WCEC;
++        dyna_policy policy;
+ };
+ 
+ struct sched_param_ex {
+diff --git a/kernel/cobalt/Makefile b/kernel/cobalt/Makefile
+index 746cada0a..2c5430da5 100644
+--- a/kernel/cobalt/Makefile
++++ b/kernel/cobalt/Makefile
+@@ -1,6 +1,7 @@
+ obj-$(CONFIG_XENOMAI) += pipeline/ xenomai.o rtdm/ posix/
+ 
+ xenomai-y :=	arith.o 	\
++		batt.o          \
+ 		bufd.o		\
+ 		clock.o		\
+ 		heap.o		\
+@@ -9,7 +10,7 @@ xenomai-y :=	arith.o 	\
+ 		registry.o	\
+ 		sched-idle.o	\
+ 		sched-rt.o	\
+-		sched-dyna.o  \
++		sched-dyna.o    \
+ 		sched.o		\
+ 		select.o	\
+ 		synch.o		\
+diff --git a/kernel/cobalt/batt.c b/kernel/cobalt/batt.c
+index 0f9b8630d..ee0fa39cb 100644
+--- a/kernel/cobalt/batt.c
++++ b/kernel/cobalt/batt.c
+@@ -1,79 +1,686 @@
+-#include <stdio.h>
+-#include <stdlib.h>
+-#include <sys/mman.h>
+-#include <signal.h>
+-#include <unistd.h>
+-
++#include <cobalt/kernel/batt.h>
++#include <cobalt/kernel/assert.h>
++#include <cobalt/kernel/heap.h>
++#include <cobalt/kernel/bufd.h>
+ #include <cobalt/kernel/pipe.h>
+ 
+-static RT_PIPE my_pipe;
++#include <linux/module.h>
++#include <linux/string.h>
++#include <linux/poll.h>
++#include <linux/slab.h>
++#include <linux/time.h>
++
++#include <rtdm/rtdm.h>
++#include <rtdm/compat.h>
++#include <rtdm/driver.h>
++#include <rtdm/ipc.h>
+ 
+ #define XDDP_PORT 0     /* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
+-#define MAX_BATT_READ_MSG_LENGTH 22 //TODO Add extra_size for battery_size + energy_production
++#define MAX_BATT_READ_MSG_LENGTH 27
++
++#define _XDDP_SYNCWAIT  0
++#define _XDDP_ATOMIC    1
++#define _XDDP_BINDING   2
++#define _XDDP_BOUND     3
++#define _XDDP_CONNECTED 4
++
++/******************** STRUCT DEF ***************************/
++
++struct rtipc_protocol;
++
++struct rtipc_private {
++	struct rtipc_protocol *proto;
++	DECLARE_XNSELECT(send_block);
++	DECLARE_XNSELECT(recv_block);
++	void *state;
++};
++
++struct rtipc_protocol {
++	const char *proto_name;
++	int proto_statesz;
++	int (*proto_init)(void);
++	void (*proto_exit)(void);
++	struct {
++		int (*socket)(struct rtdm_fd *fd);
++		void (*close)(struct rtdm_fd *fd);
++		ssize_t (*recvmsg)(struct rtdm_fd *fd,
++				   struct user_msghdr *msg, int flags);
++		ssize_t (*sendmsg)(struct rtdm_fd *fd,
++				   const struct user_msghdr *msg, int flags);
++		ssize_t (*read)(struct rtdm_fd *fd,
++				void *buf, size_t len);
++		ssize_t (*write)(struct rtdm_fd *fd,
++				 const void *buf, size_t len);
++		int (*ioctl)(struct rtdm_fd *fd,
++			     unsigned int request, void *arg);
++		unsigned int (*pollstate)(struct rtdm_fd *fd);
++	} proto_ops;
++};
++
++struct xddp_message {
++	struct xnpipe_mh mh;
++	char data[];
++};
++
++struct xddp_socket {
++	int magic;
++	struct sockaddr_ipc name;
++	struct sockaddr_ipc peer;
++
++	int minor;
++	size_t poolsz;
++	xnhandle_t handle;
++	char label[XNOBJECT_NAME_LEN];
++	struct rtdm_fd *fd;			/* i.e. RTDM socket fd */
++
++	struct xddp_message *buffer;
++	int buffer_port;
++	struct xnheap *bufpool;
++	struct xnheap privpool;
++	size_t fillsz;
++	size_t curbufsz;	/* Current streaming buffer size */
++	u_long status;
++	rtdm_lock_t lock;
++
++	nanosecs_rel_t timeout;	/* connect()/recvmsg() timeout */
++	size_t reqbufsz;	/* Requested streaming buffer size */
++
++	int (*monitor)(struct rtdm_fd *fd, int event, long arg);
++	struct rtipc_private *priv;
++};
++
++#ifdef CONFIG_XENO_OPT_VFILE
++	static char *__xddp_link_target(void *obj)
++	{
++		struct xddp_socket *sk = obj;
++
++		return kasformat("/dev/rtp%d", sk->minor);
++	}
++
++	extern struct xnptree rtipc_ptree;
++
++	static struct xnpnode_link __xddp_pnode = {
++		.node = {
++			.dirname = "xddp",
++			.root = &rtipc_ptree,
++			.ops = &xnregistry_vlink_ops,
++		},
++		.target = __xddp_link_target,
++	};
++#else /* !CONFIG_XENO_OPT_VFILE */
++	static struct xnpnode_link __xddp_pnode = {
++		.node = {
++			.dirname = "xddp",
++		},
++	};
++#endif /* !CONFIG_XENO_OPT_VFILE */
+ 
+-Msg_battery battery_read_msg(void *arg)
++/****************** END STRUCT DEF *************************/
++
++static int batt_bind_socket(struct rtipc_private *priv,struct sockaddr_ipc *sa);
++
++static int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
++		       const void *arg);
++
++static void *__xddp_alloc_handler(size_t size, void *skarg);
++static void  __xddp_output_handler(struct xnpipe_mh *mh, void *skarg);
++
++static int  __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg);
++static void __xddp_free_handler(void *buf, void *skarg);
++static void __xddp_release_handler(void *skarg);
++static int  __xddp_resize_streambuf(struct xddp_socket *sk);
++
++int __xddp_setsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg);
++int __xddp_getsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg);
++
++static struct rtdm_fd *portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
++static struct sockaddr_ipc saddr, *saddrp = &saddr;
++
++Msg_battery battery_read_msg(void)
+ {
+-  Msg_battery battery_message= {};
+-
+-  //Non-blocking pipe read using TM_NONBLOCK (use TM_INFINITE to block indefinitely until some data..)
+-  if (rt_pipe_read( &my_pipe, buff,MAX_BATT_READ_MSG_LENGTH, TM_NONBLOCK) >= 0 )
+-  { 
+-      #if 0
+-        rt_printf("Reading message from nRT:%s\n",buff);
+-      #endif
+-      //Process message in struct
+-      sscanf((const char*)received_payload.data, "[%d,%d,%d]",
+-	(int*)&battery_message.capacity,
+-	(int*)&battery_message.chargenow,
+-	(int*)&battery_message.chargefull
+-	);
++	
++    Msg_battery battery_message= {};
++    struct xnpipe_mh *mh;
++    struct xddp_message *mbuf = NULL;	
+ 
+-        /*TODO ADD:
+-        int battery_size;
+-        int energy_production;
+-        */
++	int ret = 0;
++	ret = xnpipe_recv(saddrp->sipc_port,&mh,RTDM_TIMEOUT_NONE); 
+      
+-      if (battery_message.capacity >= 0 && 
+-        battery_message.chargenow >= 0 && battery_message.chargenow <= 100 &&
+-        battery_message.chargenow >= 0 && battery_message.chargenow <= 100)
+-      {
+-        battery_message.message_integrity = true;
+-      }
+-
+-  }else{
+-    //Handle error
+-    battery_message.message_integrity = false;
+-  }
+-
+-  return battery_message;
+-  
++    if(ret > MAX_BATT_READ_MSG_LENGTH){
++      battery_message.message_integrity = false;
++    }
++
++	if (ret >= 0 )
++	{ 
++        
++	    mbuf = container_of(mh, struct xddp_message, mh);
++
++	    //Process message in struct
++	    sscanf((const char*)mbuf->data, "[%d,%d,%d,%d,%d]",
++			  (int*)&battery_message.capacity,
++			  (int*)&battery_message.chargenow,
++			  (int*)&battery_message.chargefull,
++				(int*)&battery_message.battery_size,
++	      (int*)&battery_message.energy_production
++	);
++	   
++	    if (battery_message.capacity >= 0 && 
++	      battery_message.chargenow >= 0 && battery_message.chargenow <= 100 &&
++	      battery_message.chargenow >= 0 && battery_message.chargenow <= 100 &&
++	battery_message.battery_size >= 0 && battery_message.chargenow <= BATTERY_SIZE_MAX_VALUE &&
++	      battery_message.energy_production >= 0 && battery_message.energy_production <= EP_MAX_VALUE
++	       )
++	    {
++	      battery_message.message_integrity = true;
++	    }
++
++	}else{
++	  //Handle error
++	  battery_message.message_integrity = false;
++	}
++
++    return battery_message;
+ }
+ 
+-int batt_init (void)
+-{ 
++int batt_init (void){ 	
++
++    int ret  = 0;
++    
++    struct rtdm_fd *fd; //TODO
++    const struct _rtdm_setsockaddr_args *arg; //TODO : https://xenomai.org/documentation/xenomai-3/html/xeno3prm/xddp-stream_8c-example.html
++
++    //TODO Set buffsize to 1024 bytes
++
++    struct rtipc_private *priv = rtdm_fd_to_private(fd);
+ 
+-  #if 0
+-    rt_print_auto_init(1);
+-  #endif
+-  rt_print_init(4096,str); 
++    ret = rtipc_get_sockaddr(fd, &saddrp, arg);
++
++    if (ret)
++      return ret;
++
++    if (saddrp == NULL )
++      return -EFAULT;
++
++    #ifdef USE_AUTO_SELECT
++      //Nothing to do
++    #else
++      saddrp->sipc_port = XDDP_PORT;
++    #endif
++    saddrp->sipc_family = AF_RTIPC;    
++
++    ret = batt_bind_socket(priv,saddrp);
++
++    if(ret < 0)
++    {
++      printk(XENO_INFO "xddp_pipe_create error\n");
++      return 1;
++    }else{
++      printk(XENO_INFO "XDDP pipe create OK\n");
++    }
+   
+-  rt_pipe_delete(&my_pipe);
+-  if ( rt_pipe_create( &my_pipe, "rtp0", P_MINOR_AUTO, 0 ) != 0 )
+-  {
+-    rt_printf("rt_pipe_create error\n");
+-    return 1;
+-  }else{
+-    rt_printf("RT pipe create OK\n");
+-  }
++  return 0;
++}
++
++int batt_bind_socket(struct rtipc_private *priv,struct sockaddr_ipc *sa){
++	struct xddp_socket *sk = priv->state;
++	struct xnpipe_operations ops;
++	rtdm_lockctx_t s;
++	size_t poolsz;
++	void *poolmem;
++	int ret = 0;
++
++	if (sa->sipc_family != AF_RTIPC)
++		return -EINVAL;
++
++	/* Allow special port -1 for auto-selection. */
++	if (sa->sipc_port < -1 ||
++	    sa->sipc_port >= CONFIG_XENO_OPT_PIPE_NRDEV)
++		return -EINVAL;
++
++	cobalt_atomic_enter(s);
++	if (test_bit(_XDDP_BOUND, &sk->status) ||
++	    __test_and_set_bit(_XDDP_BINDING, &sk->status))
++		ret = -EADDRINUSE;
++	cobalt_atomic_leave(s);
++	if (ret)
++		return ret;
++
++	poolsz = sk->poolsz;
++	if (poolsz > 0) {
++		poolsz = PAGE_ALIGN(poolsz);
++		poolsz += PAGE_ALIGN(sk->reqbufsz);
++		poolmem = xnheap_vmalloc(poolsz);
++		if (poolmem == NULL) {
++			ret = -ENOMEM;
++			goto fail;
++		}
++
++		ret = xnheap_init(&sk->privpool, poolmem, poolsz);
++		if (ret) {
++			xnheap_vfree(poolmem);
++			goto fail;
++		}
++
++		sk->bufpool = &sk->privpool;
++	} else
++		sk->bufpool = &cobalt_heap;
++
++	if (sk->reqbufsz > 0) {
++		sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);
++		if (sk->buffer == NULL) {
++			ret = -ENOMEM;
++			goto fail_freeheap;
++		}
++		sk->curbufsz = sk->reqbufsz;
++	}
++
++	sk->fd = rtdm_private_to_fd(priv);
++
++	ops.output = &__xddp_output_handler;
++	ops.input = &__xddp_input_handler;
++	ops.alloc_ibuf = &__xddp_alloc_handler;
++	ops.free_ibuf = &__xddp_free_handler;
++	ops.free_obuf = &__xddp_free_handler;
++	ops.release = &__xddp_release_handler;
++
++	// sa->sipc_port = -1 to find and pick the next free minor
++	ret = xnpipe_connect(sa->sipc_port, &ops, sk); 
++	if (ret < 0) {
++		if (ret == -EBUSY)
++			ret = -EADDRINUSE;
++	fail_freeheap:
++		if (poolsz > 0) {
++			xnheap_destroy(&sk->privpool);
++			xnheap_vfree(poolmem);
++		}
++	fail:
++		clear_bit(_XDDP_BINDING, &sk->status);
++		return ret;
++	}
++
++	sk->minor = ret;
++	sa->sipc_port = ret;
++	sk->name = *sa;
++
++	/* Set default destination if unset at binding time. */
++	if (sk->peer.sipc_port < 0)
++		sk->peer = *sa;
++
++	if (poolsz > 0)
++		xnheap_set_name(sk->bufpool, "xddp-pool@%d", sa->sipc_port);
++
++	if (*sk->label) {
++		ret = xnregistry_enter(sk->label, sk, &sk->handle,
++				       &__xddp_pnode.node);
++		if (ret) {
++			/* The release handler will cleanup the pool for us. */
++			xnpipe_disconnect(sk->minor);
++			return ret;
++		}
++	}
++
++	cobalt_atomic_enter(s);
++	portmap[sk->minor] = rtdm_private_to_fd(priv);
++	__clear_bit(_XDDP_BINDING, &sk->status);
++	__set_bit(_XDDP_BOUND, &sk->status);
++	if (xnselect_signal(&priv->send_block, POLLOUT))
++		xnsched_run();
++	cobalt_atomic_leave(s);
++
++        //Here, binding ok at addr /dev/rtp 'sk->minor'
++	return 0;	
++
++}
++
++int batt_deinit(void){
++
++  xnpipe_disconnect(saddrp->sipc_port);
++  printk(XENO_INFO "Destroy XDDP pipe...\n");
+   
+   return 0;
+ }
+ 
++/************************** RTIPC *************************************/
++
++int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
++		       const void *arg){
++
++	const struct _rtdm_setsockaddr_args *p;
++	struct _rtdm_setsockaddr_args sreq;
++	int ret;
++
++	if (!rtdm_fd_is_user(fd)) {
++		p = arg;
++		if (p->addrlen > 0) {
++			if (p->addrlen != sizeof(**saddrp))
++				return -EINVAL;
++			memcpy(*saddrp, p->addr, sizeof(**saddrp));
++		} else {
++			if (p->addr)
++				return -EINVAL;
++			*saddrp = NULL;
++		}
++		return 0;
++	}
++
++#ifdef CONFIG_XENO_ARCH_SYS3264
++	if (rtdm_fd_is_compat(fd)) {
++		struct compat_rtdm_setsockaddr_args csreq;
++		ret = rtdm_safe_copy_from_user(fd, &csreq, arg, sizeof(csreq));
++		if (ret)
++			return ret;
++		if (csreq.addrlen > 0) {
++			if (csreq.addrlen != sizeof(**saddrp))
++				return -EINVAL;
++			return rtdm_safe_copy_from_user(fd, *saddrp,
++							compat_ptr(csreq.addr),
++							sizeof(**saddrp));
++		}
++		if (csreq.addr)
++			return -EINVAL;
++
++		*saddrp = NULL;
++
++		return 0;
++	}
++#endif
++
++	ret = rtdm_safe_copy_from_user(fd, &sreq, arg, sizeof(sreq));
++	if (ret)
++		return ret;
++	if (sreq.addrlen > 0) {
++		if (sreq.addrlen != sizeof(**saddrp))
++			return -EINVAL;
++		return rtdm_safe_copy_from_user(fd, *saddrp,
++						sreq.addr, sizeof(**saddrp));
++	}
++	if (sreq.addr)
++		return -EINVAL;
++
++	*saddrp = NULL;
++
++	return 0;
++}
++
++/************************** XDDP *************************************/
++
++void __xddp_free_handler(void *buf, void *skarg){ /* nklock free */
++
++	struct xddp_socket *sk = skarg;
++	rtdm_lockctx_t s;
++
++	if (buf != sk->buffer) {
++		xnheap_free(sk->bufpool, buf);
++		return;
++	}
++
++	/* Reset the streaming buffer. */
++
++	rtdm_lock_get_irqsave(&sk->lock, s);
++
++	sk->fillsz = 0;
++	sk->buffer_port = -1;
++	__clear_bit(_XDDP_SYNCWAIT, &sk->status);
++	__clear_bit(_XDDP_ATOMIC, &sk->status);
++
++	/*
++	 * If a XDDP_BUFSZ request is pending, resize the streaming
++	 * buffer on-the-fly.
++	 */
++	if (unlikely(sk->curbufsz != sk->reqbufsz))
++		__xddp_resize_streambuf(sk);
++
++	rtdm_lock_put_irqrestore(&sk->lock, s);
++}
++
++int __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg){ /* nklock held */
++
++	struct xddp_socket *sk = skarg;
++
++	if (sk->monitor) {
++		if (retval == 0)
++			/* Callee may alter the return value passed to userland. */
++			retval = sk->monitor(sk->fd, XDDP_EVTIN, xnpipe_m_size(mh));
++		else if (retval == -EPIPE && mh == NULL)
++			sk->monitor(sk->fd, XDDP_EVTDOWN, 0);
++	}
++
++	if (retval == 0 &&
++	    (__xnpipe_pollstate(sk->minor) & POLLIN) != 0 &&
++	    xnselect_signal(&sk->priv->recv_block, POLLIN))
++		xnsched_run();
++
++	return retval;
++}
++
++void __xddp_output_handler(struct xnpipe_mh *mh, void *skarg){ /* nklock held */
++
++	struct xddp_socket *sk = skarg;
++
++	if (sk->monitor)
++		sk->monitor(sk->fd, XDDP_EVTOUT, xnpipe_m_size(mh));
++}
++
++void *__xddp_alloc_handler(size_t size, void *skarg){ /* nklock free */
+ 
+-int batt_deinit(void)
++	struct xddp_socket *sk = skarg;
++	void *buf;
++
++	/* Try to allocate memory for the incoming message. */
++	buf = xnheap_alloc(sk->bufpool, size);
++	if (unlikely(buf == NULL)) {
++		if (sk->monitor)
++			sk->monitor(sk->fd, XDDP_EVTNOBUF, size);
++		if (size > xnheap_get_size(sk->bufpool))
++			buf = (void *)-1; /* Will never succeed. */
++	}
++
++	return buf;
++}
++
++void __xddp_release_handler(void *skarg){ /* nklock free */
++
++	struct xddp_socket *sk = skarg;
++	void *poolmem;
++	u32 poolsz;
++
++	if (sk->bufpool == &sk->privpool) {
++		poolmem = xnheap_get_membase(&sk->privpool);
++		poolsz = xnheap_get_size(&sk->privpool);
++		xnheap_destroy(&sk->privpool);
++		xnheap_vfree(poolmem);
++	} else if (sk->buffer)
++		xnfree(sk->buffer);
++
++	kfree(sk);
++}
++
++int __xddp_resize_streambuf(struct xddp_socket *sk){ /* sk->lock held */
++	if (sk->buffer)
++		xnheap_free(sk->bufpool, sk->buffer);
++
++	if (sk->reqbufsz == 0) {
++		sk->buffer = NULL;
++		sk->curbufsz = 0;
++		return 0;
++	}
++
++	sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);
++	if (sk->buffer == NULL) {
++		sk->curbufsz = 0;
++		return -ENOMEM;
++	}
++
++	sk->curbufsz = sk->reqbufsz;
++
++	return 0;
++}
++
++int __xddp_setsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg)
+ {
++	int (*monitor)(struct rtdm_fd *fd, int event, long arg);
++	struct _rtdm_setsockopt_args sopt;
++	struct rtipc_port_label plabel;
++	struct __kernel_old_timeval tv;
++	rtdm_lockctx_t s;
++	size_t len;
++	int ret;
++
++	ret = rtipc_get_sockoptin(fd, &sopt, arg);
++	if (ret)
++		return ret;
++
++	if (sopt.level == SOL_SOCKET) {
++		switch (sopt.optname) {
++
++		case SO_RCVTIMEO_OLD:
++			ret = rtipc_get_timeval(fd, &tv, sopt.optval, sopt.optlen);
++			if (ret)
++				return ret;
++			sk->timeout = rtipc_timeval_to_ns(&tv);
++			break;
++
++		default:
++			ret = -EINVAL;
++		}
++
++		return ret;
++	}
++
++	if (sopt.level != SOL_XDDP)
++		return -ENOPROTOOPT;
++
++	switch (sopt.optname) {
++
++	case XDDP_BUFSZ:
++		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
++		if (ret)
++			return ret;
++		if (len > 0) {
++			len += sizeof(struct xddp_message);
++			if (sk->bufpool &&
++			    len > xnheap_get_size(sk->bufpool)) {
++				return -EINVAL;
++			}
++		}
++		rtdm_lock_get_irqsave(&sk->lock, s);
++		sk->reqbufsz = len;
++		if (len != sk->curbufsz &&
++		    !test_bit(_XDDP_SYNCWAIT, &sk->status) &&
++		    test_bit(_XDDP_BOUND, &sk->status))
++			ret = __xddp_resize_streambuf(sk);
++		rtdm_lock_put_irqrestore(&sk->lock, s);
++		break;
++
++	case XDDP_POOLSZ:
++		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
++		if (ret)
++			return ret;
++		if (len == 0)
++			return -EINVAL;
++		cobalt_atomic_enter(s);
++		if (test_bit(_XDDP_BOUND, &sk->status) ||
++		    test_bit(_XDDP_BINDING, &sk->status))
++			ret = -EALREADY;
++		else
++			sk->poolsz = len;
++		cobalt_atomic_leave(s);
++		break;
++
++	case XDDP_MONITOR:
++		/* Monitoring is available from kernel-space only. */
++		if (rtdm_fd_is_user(fd))
++			return -EPERM;
++		if (sopt.optlen != sizeof(monitor))
++			return -EINVAL;
++		if (rtipc_get_arg(NULL, &monitor, sopt.optval, sizeof(monitor)))
++			return -EFAULT;
++		sk->monitor = monitor;
++		break;
+ 
+-  rt_printf("Destroy RT pipe...\n");
+-  rt_pipe_delete(&my_pipe);
++	case XDDP_LABEL:
++		if (sopt.optlen < sizeof(plabel))
++			return -EINVAL;
++		if (rtipc_get_arg(fd, &plabel, sopt.optval, sizeof(plabel)))
++			return -EFAULT;
++		cobalt_atomic_enter(s);
++		if (test_bit(_XDDP_BOUND, &sk->status) ||
++		    test_bit(_XDDP_BINDING, &sk->status))
++			ret = -EALREADY;
++		else {
++			strcpy(sk->label, plabel.label);
++			sk->label[XNOBJECT_NAME_LEN-1] = 0;
++		}
++		cobalt_atomic_leave(s);
++		break;
+ 
++	default:
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++int __xddp_getsockopt(struct xddp_socket *sk,
++			     struct rtdm_fd *fd,
++			     void *arg)
++{
++	struct _rtdm_getsockopt_args sopt;
++	struct rtipc_port_label plabel;
++	struct __kernel_old_timeval tv;
++	rtdm_lockctx_t s;
++	socklen_t len;
++	int ret;
++
++	ret = rtipc_get_sockoptout(fd, &sopt, arg);
++	if (ret)
++		return ret;
++
++	if (rtipc_get_arg(fd, &len, sopt.optlen, sizeof(len)))
++		return -EFAULT;
++
++	if (sopt.level == SOL_SOCKET) {
++		switch (sopt.optname) {
++
++		case SO_RCVTIMEO_OLD:
++			rtipc_ns_to_timeval(&tv, sk->timeout);
++			ret = rtipc_put_timeval(fd, sopt.optval, &tv, len);
++			if (ret)
++				return ret;
++			break;
++
++		default:
++			ret = -EINVAL;
++		}
++
++		return ret;
++	}
++
++	if (sopt.level != SOL_XDDP)
++		return -ENOPROTOOPT;
++
++	switch (sopt.optname) {
++
++	case XDDP_LABEL:
++		if (len < sizeof(plabel))
++			return -EINVAL;
++		cobalt_atomic_enter(s);
++		strcpy(plabel.label, sk->label);
++		cobalt_atomic_leave(s);
++		if (rtipc_put_arg(fd, sopt.optval, &plabel, sizeof(plabel)))
++			return -EFAULT;
++		break;
++
++	default:
++		ret = -EINVAL;
++	}
++
++	return ret;
+ }
++
+diff --git a/kernel/cobalt/posix/sched.c b/kernel/cobalt/posix/sched.c
+index 024bc9382..3b3af918f 100644
+--- a/kernel/cobalt/posix/sched.c
++++ b/kernel/cobalt/posix/sched.c
+@@ -32,14 +32,16 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 	xnticks_t tslice;
+ 	
+ 	xnticks_t deadline;
+-	int WCET;        
+-	bool use_EDH;
++	double WCET;
++	double WCEC;
++        dyna_policy dynamic_policy;
+ 
+ 	prio = param_ex->sched_priority;
+         
+-	deadline = param_ex->sched_u.dyna.sched_absolute_deadline;
+-	WCET     = param_ex->sched_u.dyna.WCET;
+-        use_EDH  = param_ex->sched_u.dyna.use_EDH;
++	deadline        = param_ex->sched_u.dyna.sched_absolute_deadline;
++	WCET            = param_ex->sched_u.dyna.WCET;
++        WCEC            = param_ex->sched_u.dyna.WCEC;
++        dynamic_policy  = param_ex->sched_u.dyna.policy;
+ 
+ 	tslice = XN_INFINITE;
+ 	policy = u_policy;
+@@ -62,9 +64,10 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
+ 	}
+ 	param->rt.prio = prio;
+ 
+-        if(use_EDH){
+-          param->rt.WCET = WCET;
+-	  param->rt.use_EDH = use_EDH;
++        if(dynamic_policy == EDH_ASAP || dynamic_policy == EDH_ALAP){
++          param->rt.WCET   = WCET;
++	  param->rt.WCEC   = WCEC;
++	  param->rt.policy = dynamic_policy;
+ 	}
+ 
+ 	switch (policy) {
+diff --git a/kernel/cobalt/sched.c b/kernel/cobalt/sched.c
+index d338e1f33..62b49740c 100644
+--- a/kernel/cobalt/sched.c
++++ b/kernel/cobalt/sched.c
+@@ -26,6 +26,7 @@
+ #include <cobalt/kernel/intr.h>
+ #include <cobalt/kernel/heap.h>
+ #include <cobalt/kernel/arith.h>
++#include <cobalt/kernel/batt.h>
+ #include <cobalt/uapi/signal.h>
+ #include <pipeline/sched.h>
+ #define CREATE_TRACE_POINTS
+@@ -294,9 +295,27 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	struct xnsched_class *p __maybe_unused;
+ 	struct xnthread *curr = sched->curr;
+ 	struct xnthread *thread;
++	
++	/*EDH Param */	
++        Msg_battery my_msg_battery = {0,0,0,0,0,false};
+ 
+-        bool use_EDH = false;
+-	int WCET = 0;
++        bool use_EDH      = false;
++	bool is_proc_idle = false;
++
++	double WCEC = 0;
++	double WCET = 0;
++
++	int total_proc_demand   = 0; //Processor demand at time T
++	double total_WCET_unfinish = 0; //Remaining execution time for unfinished tasks
++
++	int slack_time      = 0;
++	int slack_energy    = 0;
++	int energy_demand   = 0;
++	int energy_produced = 0;
++
++	int total_energy    = 0;
++
++	/* End EDH Param */
+ 
+ 	if (!xnthread_test_state(curr, XNTHREAD_BLOCK_BITS | XNZOMBIE)) {
+ 		/*
+@@ -322,6 +341,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 
+ 	struct list_head *q = &sched->rt.runnable;
+ 	struct xnthread *b_thread;
++        union xnsched_policy_param param;
+ 
+ 	if (list_empty(q))
+ 		goto no_battery;
+@@ -329,7 +349,10 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	list_for_each_entry(b_thread, q, rlink) {
+   	    if (unlikely(b_thread->sched_class == &xnsched_class_dyna)){
+                 //Search through EDF thread
+-                if (b_thread->use_EDH == true){
++                b_thread->sched_class->sched_getparam(b_thread, &param);
++
++
++                if (param.rt.policy == EDH_ASAP || param.rt.policy == EDH_ALAP){
+                   use_EDH = true;
+                   goto battery;
+                 }
+@@ -337,14 +360,27 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	}
+ 
+         /******************************************************/
+-        battery:
++        battery: //Consider only one battery
+ 	  // Access battery data only if one of following task use EDH scheduling class
+           if(use_EDH){
+-            Msg_battery my_msg_battery = battery_read_msg();
++            my_msg_battery = battery_read_msg();
+         
+             if (my_msg_battery.message_integrity == true){
+-   	      rt_printf(
++   	      printk(XENO_INFO
+                 "chargenow :%d\ncapacity:%d\n",my_msg_battery.chargenow,my_msg_battery.capacity
++	      
++              /*TODO Compute :
++		
++		total_proc_demand 
++		total_WCET_unfinish
++		energy_demand				
++      		energy_produced //In [ti,deadline]		
++
++		slack_time
++		slack_energy
++		total_energy
++	      */	
++		
+               );      
+   	    }
+           }
+@@ -359,7 +395,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 	for_each_xnsched_class(p) {
+ 		thread = p->sched_pick(sched);
+ 
+-		//TODO Alexy : Same as below for !CONFIG_XENO_OPT_SCHED_CLASSES
++		//Alexy : Same as below for !CONFIG_XENO_OPT_SCHED_CLASSES
+ 
+ 		if (thread) {
+ 			set_thread_running(sched, thread);
+@@ -369,16 +405,42 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+ 
+ 	return NULL; /* Never executed because of the idle class. */
+ #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
+-	thread = xnsched_rt_pick(sched);
+-	if (unlikely(thread == NULL))
+-		thread = &sched->rootcb;
+ 
+          if (use_EDH){
+-           // if we don't have sufficient energy,
+-           // need to call the idle task (thread = &sched->rootcb) and wait for the battery to be fill up again
++	   thread = &sched->rootcb;
+ 	   
+-	   //TODO EDF computation
+-           WCET = thread->WCET;
++           union xnsched_policy_param dyna_param;   
++           thread->sched_class->sched_getparam(b_thread, &dyna_param);
++
++	   //ED-H Rule n°3:	   
++           if(total_energy == 0 || slack_energy == 0){
++             //Proc. IDLE
++           }
++             
++	   //ED-H Rule n°4: 
++           if(total_energy == my_msg_battery.capacity || slack_time == 0){
++             thread = xnsched_rt_pick(sched);
++               
++             if (unlikely(thread == NULL))
++	       thread = &sched->rootcb;
++           }
++
++	   //ED-H Rule n°5
++	   if(total_energy >0 && total_energy < my_msg_battery.capacity 
++	      && slack_time > 0 && slack_energy > 0){     
++              if(dyna_param.rt.policy == EDH_ALAP){
++                thread = xnsched_rt_pick(sched);
++               
++                if (unlikely(thread == NULL))
++	          thread = &sched->rootcb;
++      
++	      }//else //ASAP => Proc. IDLE
++           }
++		
++         }else{
++           thread = xnsched_rt_pick(sched);
++	   if (unlikely(thread == NULL))
++	     thread = &sched->rootcb;
+          }
+ 
+ 	set_thread_running(sched, thread);
+diff --git a/lib/alchemy/task.c b/lib/alchemy/task.c
+index affe06798..01b1e172d 100644
+--- a/lib/alchemy/task.c
++++ b/lib/alchemy/task.c
+@@ -539,10 +539,12 @@ out:
+ //next_deadline est ici relatif
+ #ifndef DOXYGEN_CPP
+ CURRENT_IMPL(int, rt_task_create_dyna, (RT_TASK *task, const char *name,
+-				   int stksize, xnticks_t next_deadline, int mode))
++				   int stksize, xnticks_t next_deadline,double WCET,double WCEC,
++                                   dyna_policy policy, int mode))
+ #else
+ int rt_task_create_dyna(RT_TASK *task, const char *name,
+-		   int stksize, xnticks_t next_deadline, int mode)
++		   int stksize, xnticks_t next_deadline,double WCET,double WCEC,
++                   dyna_policy policy, int mode)
+ #endif
+ {
+ 	struct corethread_attributes cta;
+diff --git a/lib/copperplate/internal.c b/lib/copperplate/internal.c
+index 63e2eae24..2424c727e 100644
+--- a/lib/copperplate/internal.c
++++ b/lib/copperplate/internal.c
+@@ -64,7 +64,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
+ 	attr_ex.nonstd.sched_param.sched_u.dyna.sched_absolute_deadline = cta->param_ex.sched_u.dyna.sched_absolute_deadline;
+ 	attr_ex.nonstd.sched_param.sched_u.dyna.sched_relative_deadline = cta->param_ex.sched_u.dyna.sched_relative_deadline;
+ 	attr_ex.nonstd.sched_param.sched_u.dyna.WCET = cta->param_ex.sched_u.dyna.WCET;
+-	attr_ex.nonstd.sched_param.sched_u.dyna.use_EDH = cta->param_ex.sched_u.dyna.use_EDH;
++	attr_ex.nonstd.sched_param.sched_u.dyna.WCEC = cta->param_ex.sched_u.dyna.WCEC;
++	attr_ex.nonstd.sched_param.sched_u.dyna.policy = cta->param_ex.sched_u.dyna.policy;
+ 
+ 	ret = -pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta);
+ 	pthread_attr_destroy_ex(&attr_ex);
+-- 
+2.17.1
+
+
+From 9e063a446a8e93872a9f2529f7e74b2228c88dfe Mon Sep 17 00:00:00 2001
+From: Alexy Debus <alexy.debus@eleves.ec-nantes.fr>
+Date: Fri, 21 Jan 2022 00:56:59 +0100
+Subject: [PATCH 4/4] Correction for XDDP communication on pipe 0
+
+- Modif.in batt.c file (cobalt folder) to add socket creation and reading messages from Kernel space driver
+
+TODO : Compute slack_time & slack_energy in sched.c (cobalt folder) => Cf TODO section in funct. xnsched_pick_next
+---
+ kernel/cobalt/batt.c  | 686 +++++-------------------------------------
+ kernel/cobalt/sched.c |  33 +-
+ 2 files changed, 90 insertions(+), 629 deletions(-)
+
+diff --git a/kernel/cobalt/batt.c b/kernel/cobalt/batt.c
+index ee0fa39cb..e7ded8d4a 100644
+--- a/kernel/cobalt/batt.c
++++ b/kernel/cobalt/batt.c
+@@ -15,152 +15,48 @@
+ #include <rtdm/driver.h>
+ #include <rtdm/ipc.h>
+ 
++#if 0
++  #include <sys/select.h>
++  #include <linux/fcntl.h>
++#endif
++
+ #define XDDP_PORT 0     /* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
+ #define MAX_BATT_READ_MSG_LENGTH 27
+ 
+-#define _XDDP_SYNCWAIT  0
+-#define _XDDP_ATOMIC    1
+-#define _XDDP_BINDING   2
+-#define _XDDP_BOUND     3
+-#define _XDDP_CONNECTED 4
+-
+-/******************** STRUCT DEF ***************************/
+-
+-struct rtipc_protocol;
+-
+-struct rtipc_private {
+-	struct rtipc_protocol *proto;
+-	DECLARE_XNSELECT(send_block);
+-	DECLARE_XNSELECT(recv_block);
+-	void *state;
+-};
+-
+-struct rtipc_protocol {
+-	const char *proto_name;
+-	int proto_statesz;
+-	int (*proto_init)(void);
+-	void (*proto_exit)(void);
+-	struct {
+-		int (*socket)(struct rtdm_fd *fd);
+-		void (*close)(struct rtdm_fd *fd);
+-		ssize_t (*recvmsg)(struct rtdm_fd *fd,
+-				   struct user_msghdr *msg, int flags);
+-		ssize_t (*sendmsg)(struct rtdm_fd *fd,
+-				   const struct user_msghdr *msg, int flags);
+-		ssize_t (*read)(struct rtdm_fd *fd,
+-				void *buf, size_t len);
+-		ssize_t (*write)(struct rtdm_fd *fd,
+-				 const void *buf, size_t len);
+-		int (*ioctl)(struct rtdm_fd *fd,
+-			     unsigned int request, void *arg);
+-		unsigned int (*pollstate)(struct rtdm_fd *fd);
+-	} proto_ops;
+-};
+-
+-struct xddp_message {
+-	struct xnpipe_mh mh;
+-	char data[];
+-};
+-
+-struct xddp_socket {
+-	int magic;
+-	struct sockaddr_ipc name;
+-	struct sockaddr_ipc peer;
+-
+-	int minor;
+-	size_t poolsz;
+-	xnhandle_t handle;
+-	char label[XNOBJECT_NAME_LEN];
+-	struct rtdm_fd *fd;			/* i.e. RTDM socket fd */
+-
+-	struct xddp_message *buffer;
+-	int buffer_port;
+-	struct xnheap *bufpool;
+-	struct xnheap privpool;
+-	size_t fillsz;
+-	size_t curbufsz;	/* Current streaming buffer size */
+-	u_long status;
+-	rtdm_lock_t lock;
+-
+-	nanosecs_rel_t timeout;	/* connect()/recvmsg() timeout */
+-	size_t reqbufsz;	/* Requested streaming buffer size */
+-
+-	int (*monitor)(struct rtdm_fd *fd, int event, long arg);
+-	struct rtipc_private *priv;
+-};
+-
+-#ifdef CONFIG_XENO_OPT_VFILE
+-	static char *__xddp_link_target(void *obj)
+-	{
+-		struct xddp_socket *sk = obj;
+-
+-		return kasformat("/dev/rtp%d", sk->minor);
+-	}
+-
+-	extern struct xnptree rtipc_ptree;
+-
+-	static struct xnpnode_link __xddp_pnode = {
+-		.node = {
+-			.dirname = "xddp",
+-			.root = &rtipc_ptree,
+-			.ops = &xnregistry_vlink_ops,
+-		},
+-		.target = __xddp_link_target,
+-	};
+-#else /* !CONFIG_XENO_OPT_VFILE */
+-	static struct xnpnode_link __xddp_pnode = {
+-		.node = {
+-			.dirname = "xddp",
+-		},
+-	};
+-#endif /* !CONFIG_XENO_OPT_VFILE */
+-
+-/****************** END STRUCT DEF *************************/
+-
+-static int batt_bind_socket(struct rtipc_private *priv,struct sockaddr_ipc *sa);
+-
+-static int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
+-		       const void *arg);
++static int ufd = 0;
+ 
+-static void *__xddp_alloc_handler(size_t size, void *skarg);
+-static void  __xddp_output_handler(struct xnpipe_mh *mh, void *skarg);
++Msg_battery battery_read_msg(void)
++{
++	char buf[128];
++    struct timespec ts;
++    fd_set readfds; 
++    Msg_battery battery_message= {};
++    int ret = 0,ret_select = 0;
+ 
+-static int  __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg);
+-static void __xddp_free_handler(void *buf, void *skarg);
+-static void __xddp_release_handler(void *skarg);
+-static int  __xddp_resize_streambuf(struct xddp_socket *sk);
++    #if 0
++	  fcntl(ufd, F_SETFL, O_NONBLOCK);    
+ 
+-int __xddp_setsockopt(struct xddp_socket *sk,
+-			     struct rtdm_fd *fd,
+-			     void *arg);
+-int __xddp_getsockopt(struct xddp_socket *sk,
+-			     struct rtdm_fd *fd,
+-			     void *arg);
++    //TODO Warning : blocking call here... Need to use select
++    ts.tv_sec = 0;
++    ts.tv_nsec = 0; /* 0 ms */
+ 
+-static struct rtdm_fd *portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
+-static struct sockaddr_ipc saddr, *saddrp = &saddr;
++    ret_select = select(ufd + 1, &readfds, NULL, NULL, &ts); 
++    	
++    if (ret_select ==1)
++      ret = rtdm_recvfrom(ufd, buf, MAX_BATT_READ_MSG_LENGTH, 0, NULL, 0);
++    #endif
+ 
+-Msg_battery battery_read_msg(void)
+-{
+-	
+-    Msg_battery battery_message= {};
+-    struct xnpipe_mh *mh;
+-    struct xddp_message *mbuf = NULL;	
++    ret = rtdm_read(ufd, buf, MAX_BATT_READ_MSG_LENGTH);    
+ 
+-	int ret = 0;
+-	ret = xnpipe_recv(saddrp->sipc_port,&mh,RTDM_TIMEOUT_NONE); 
+-     
+     if(ret > MAX_BATT_READ_MSG_LENGTH){
+       battery_message.message_integrity = false;
+     }
+ 
+ 	if (ret >= 0 )
+ 	{ 
+-        
+-	    mbuf = container_of(mh, struct xddp_message, mh);
+ 
+ 	    //Process message in struct
+-	    sscanf((const char*)mbuf->data, "[%d,%d,%d,%d,%d]",
++	    sscanf((const char*)buf, "[%d,%d,%d,%d,%d]",
+ 			  (int*)&battery_message.capacity,
+ 			  (int*)&battery_message.chargenow,
+ 			  (int*)&battery_message.chargefull,
+@@ -182,505 +78,65 @@ Msg_battery battery_read_msg(void)
+ 	  //Handle error
+ 	  battery_message.message_integrity = false;
+ 	}
++     
+ 
+     return battery_message;
+ }
+ 
+ int batt_init (void){ 	
+ 
+-    int ret  = 0;
+-    
+-    struct rtdm_fd *fd; //TODO
+-    const struct _rtdm_setsockaddr_args *arg; //TODO : https://xenomai.org/documentation/xenomai-3/html/xeno3prm/xddp-stream_8c-example.html
+-
+-    //TODO Set buffsize to 1024 bytes
+-
+-    struct rtipc_private *priv = rtdm_fd_to_private(fd);
+-
+-    ret = rtipc_get_sockaddr(fd, &saddrp, arg);
+-
+-    if (ret)
+-      return ret;
+-
+-    if (saddrp == NULL )
+-      return -EFAULT;
+-
+-    #ifdef USE_AUTO_SELECT
+-      //Nothing to do
+-    #else
+-      saddrp->sipc_port = XDDP_PORT;
+-    #endif
+-    saddrp->sipc_family = AF_RTIPC;    
+-
+-    ret = batt_bind_socket(priv,saddrp);
+-
+-    if(ret < 0)
+-    {
+-      printk(XENO_INFO "xddp_pipe_create error\n");
+-      return 1;
+-    }else{
+-      printk(XENO_INFO "XDDP pipe create OK\n");
++    //Alternative: Access to /dev/xeno_rtipc    
++    struct sockaddr_ipc saddr;
++    int ret;
++    size_t poolsz;
++        
++    /*
++    * Get a datagram socket to bind to the RT endpoint. Each
++    * endpoint is represented by a port number within the XDDP
++    * protocol namespace.
++    */
++        
++    ufd = __rtdm_dev_socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP);
++    if (ufd < 0) {
++            printk("XENO_WARNING __rtdm_dev_socket failed\n");
++            return -1;
+     }
+-  
+-  return 0;
+-}
+-
+-int batt_bind_socket(struct rtipc_private *priv,struct sockaddr_ipc *sa){
+-	struct xddp_socket *sk = priv->state;
+-	struct xnpipe_operations ops;
+-	rtdm_lockctx_t s;
+-	size_t poolsz;
+-	void *poolmem;
+-	int ret = 0;
+-
+-	if (sa->sipc_family != AF_RTIPC)
+-		return -EINVAL;
+-
+-	/* Allow special port -1 for auto-selection. */
+-	if (sa->sipc_port < -1 ||
+-	    sa->sipc_port >= CONFIG_XENO_OPT_PIPE_NRDEV)
+-		return -EINVAL;
+-
+-	cobalt_atomic_enter(s);
+-	if (test_bit(_XDDP_BOUND, &sk->status) ||
+-	    __test_and_set_bit(_XDDP_BINDING, &sk->status))
+-		ret = -EADDRINUSE;
+-	cobalt_atomic_leave(s);
+-	if (ret)
+-		return ret;
+-
+-	poolsz = sk->poolsz;
+-	if (poolsz > 0) {
+-		poolsz = PAGE_ALIGN(poolsz);
+-		poolsz += PAGE_ALIGN(sk->reqbufsz);
+-		poolmem = xnheap_vmalloc(poolsz);
+-		if (poolmem == NULL) {
+-			ret = -ENOMEM;
+-			goto fail;
+-		}
+-
+-		ret = xnheap_init(&sk->privpool, poolmem, poolsz);
+-		if (ret) {
+-			xnheap_vfree(poolmem);
+-			goto fail;
+-		}
+-
+-		sk->bufpool = &sk->privpool;
+-	} else
+-		sk->bufpool = &cobalt_heap;
+-
+-	if (sk->reqbufsz > 0) {
+-		sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);
+-		if (sk->buffer == NULL) {
+-			ret = -ENOMEM;
+-			goto fail_freeheap;
+-		}
+-		sk->curbufsz = sk->reqbufsz;
+-	}
+-
+-	sk->fd = rtdm_private_to_fd(priv);
+-
+-	ops.output = &__xddp_output_handler;
+-	ops.input = &__xddp_input_handler;
+-	ops.alloc_ibuf = &__xddp_alloc_handler;
+-	ops.free_ibuf = &__xddp_free_handler;
+-	ops.free_obuf = &__xddp_free_handler;
+-	ops.release = &__xddp_release_handler;
+-
+-	// sa->sipc_port = -1 to find and pick the next free minor
+-	ret = xnpipe_connect(sa->sipc_port, &ops, sk); 
+-	if (ret < 0) {
+-		if (ret == -EBUSY)
+-			ret = -EADDRINUSE;
+-	fail_freeheap:
+-		if (poolsz > 0) {
+-			xnheap_destroy(&sk->privpool);
+-			xnheap_vfree(poolmem);
+-		}
+-	fail:
+-		clear_bit(_XDDP_BINDING, &sk->status);
+-		return ret;
+-	}
+-
+-	sk->minor = ret;
+-	sa->sipc_port = ret;
+-	sk->name = *sa;
+-
+-	/* Set default destination if unset at binding time. */
+-	if (sk->peer.sipc_port < 0)
+-		sk->peer = *sa;
+-
+-	if (poolsz > 0)
+-		xnheap_set_name(sk->bufpool, "xddp-pool@%d", sa->sipc_port);
+-
+-	if (*sk->label) {
+-		ret = xnregistry_enter(sk->label, sk, &sk->handle,
+-				       &__xddp_pnode.node);
+-		if (ret) {
+-			/* The release handler will cleanup the pool for us. */
+-			xnpipe_disconnect(sk->minor);
+-			return ret;
+-		}
++    /*
++     * Set a local 16k pool for the RT endpoint. Memory needed to
++     * convey datagrams will be pulled from this pool, instead of
++     * Xenomai's system pool.
++     */
++    poolsz = 16384; /* bytes */
++    ret = rtdm_setsockopt(ufd, SOL_XDDP, XDDP_POOLSZ,
++                     &poolsz, sizeof(poolsz));
++    if (ret)
++            printk("XENO_WARNING setsockopt failed\n");
++    /*
++     * Bind the socket to the port, to setup a proxy to channel
++     * traffic to/from the Linux domain.
++     *
++     * saddr.sipc_port specifies the port number to use.
++     */
++    memset(&saddr, 0, sizeof(saddr));
++    saddr.sipc_family = AF_RTIPC;
++    saddr.sipc_port = XDDP_PORT;
++    ret = rtdm_bind(ufd, (struct sockaddr *)&saddr, sizeof(saddr));
++
++	if(ret < 0)
++	{
++	  printk(XENO_INFO "bind error\n");
++	  return 1;
++	}else{
++	  printk(XENO_INFO "bind OK on port %d\n",XDDP_PORT);
+ 	}
+ 
+-	cobalt_atomic_enter(s);
+-	portmap[sk->minor] = rtdm_private_to_fd(priv);
+-	__clear_bit(_XDDP_BINDING, &sk->status);
+-	__set_bit(_XDDP_BOUND, &sk->status);
+-	if (xnselect_signal(&priv->send_block, POLLOUT))
+-		xnsched_run();
+-	cobalt_atomic_leave(s);
+-
+-        //Here, binding ok at addr /dev/rtp 'sk->minor'
+-	return 0;	
+-
++	return 0;
+ }
+ 
+ int batt_deinit(void){
+ 
+-  xnpipe_disconnect(saddrp->sipc_port);
+-  printk(XENO_INFO "Destroy XDDP pipe...\n");
++  rtdm_close(ufd);
++  printk(XENO_INFO "Destroy socket...\n");
+   
+   return 0;
+ }
+-
+-/************************** RTIPC *************************************/
+-
+-int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
+-		       const void *arg){
+-
+-	const struct _rtdm_setsockaddr_args *p;
+-	struct _rtdm_setsockaddr_args sreq;
+-	int ret;
+-
+-	if (!rtdm_fd_is_user(fd)) {
+-		p = arg;
+-		if (p->addrlen > 0) {
+-			if (p->addrlen != sizeof(**saddrp))
+-				return -EINVAL;
+-			memcpy(*saddrp, p->addr, sizeof(**saddrp));
+-		} else {
+-			if (p->addr)
+-				return -EINVAL;
+-			*saddrp = NULL;
+-		}
+-		return 0;
+-	}
+-
+-#ifdef CONFIG_XENO_ARCH_SYS3264
+-	if (rtdm_fd_is_compat(fd)) {
+-		struct compat_rtdm_setsockaddr_args csreq;
+-		ret = rtdm_safe_copy_from_user(fd, &csreq, arg, sizeof(csreq));
+-		if (ret)
+-			return ret;
+-		if (csreq.addrlen > 0) {
+-			if (csreq.addrlen != sizeof(**saddrp))
+-				return -EINVAL;
+-			return rtdm_safe_copy_from_user(fd, *saddrp,
+-							compat_ptr(csreq.addr),
+-							sizeof(**saddrp));
+-		}
+-		if (csreq.addr)
+-			return -EINVAL;
+-
+-		*saddrp = NULL;
+-
+-		return 0;
+-	}
+-#endif
+-
+-	ret = rtdm_safe_copy_from_user(fd, &sreq, arg, sizeof(sreq));
+-	if (ret)
+-		return ret;
+-	if (sreq.addrlen > 0) {
+-		if (sreq.addrlen != sizeof(**saddrp))
+-			return -EINVAL;
+-		return rtdm_safe_copy_from_user(fd, *saddrp,
+-						sreq.addr, sizeof(**saddrp));
+-	}
+-	if (sreq.addr)
+-		return -EINVAL;
+-
+-	*saddrp = NULL;
+-
+-	return 0;
+-}
+-
+-/************************** XDDP *************************************/
+-
+-void __xddp_free_handler(void *buf, void *skarg){ /* nklock free */
+-
+-	struct xddp_socket *sk = skarg;
+-	rtdm_lockctx_t s;
+-
+-	if (buf != sk->buffer) {
+-		xnheap_free(sk->bufpool, buf);
+-		return;
+-	}
+-
+-	/* Reset the streaming buffer. */
+-
+-	rtdm_lock_get_irqsave(&sk->lock, s);
+-
+-	sk->fillsz = 0;
+-	sk->buffer_port = -1;
+-	__clear_bit(_XDDP_SYNCWAIT, &sk->status);
+-	__clear_bit(_XDDP_ATOMIC, &sk->status);
+-
+-	/*
+-	 * If a XDDP_BUFSZ request is pending, resize the streaming
+-	 * buffer on-the-fly.
+-	 */
+-	if (unlikely(sk->curbufsz != sk->reqbufsz))
+-		__xddp_resize_streambuf(sk);
+-
+-	rtdm_lock_put_irqrestore(&sk->lock, s);
+-}
+-
+-int __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg){ /* nklock held */
+-
+-	struct xddp_socket *sk = skarg;
+-
+-	if (sk->monitor) {
+-		if (retval == 0)
+-			/* Callee may alter the return value passed to userland. */
+-			retval = sk->monitor(sk->fd, XDDP_EVTIN, xnpipe_m_size(mh));
+-		else if (retval == -EPIPE && mh == NULL)
+-			sk->monitor(sk->fd, XDDP_EVTDOWN, 0);
+-	}
+-
+-	if (retval == 0 &&
+-	    (__xnpipe_pollstate(sk->minor) & POLLIN) != 0 &&
+-	    xnselect_signal(&sk->priv->recv_block, POLLIN))
+-		xnsched_run();
+-
+-	return retval;
+-}
+-
+-void __xddp_output_handler(struct xnpipe_mh *mh, void *skarg){ /* nklock held */
+-
+-	struct xddp_socket *sk = skarg;
+-
+-	if (sk->monitor)
+-		sk->monitor(sk->fd, XDDP_EVTOUT, xnpipe_m_size(mh));
+-}
+-
+-void *__xddp_alloc_handler(size_t size, void *skarg){ /* nklock free */
+-
+-	struct xddp_socket *sk = skarg;
+-	void *buf;
+-
+-	/* Try to allocate memory for the incoming message. */
+-	buf = xnheap_alloc(sk->bufpool, size);
+-	if (unlikely(buf == NULL)) {
+-		if (sk->monitor)
+-			sk->monitor(sk->fd, XDDP_EVTNOBUF, size);
+-		if (size > xnheap_get_size(sk->bufpool))
+-			buf = (void *)-1; /* Will never succeed. */
+-	}
+-
+-	return buf;
+-}
+-
+-void __xddp_release_handler(void *skarg){ /* nklock free */
+-
+-	struct xddp_socket *sk = skarg;
+-	void *poolmem;
+-	u32 poolsz;
+-
+-	if (sk->bufpool == &sk->privpool) {
+-		poolmem = xnheap_get_membase(&sk->privpool);
+-		poolsz = xnheap_get_size(&sk->privpool);
+-		xnheap_destroy(&sk->privpool);
+-		xnheap_vfree(poolmem);
+-	} else if (sk->buffer)
+-		xnfree(sk->buffer);
+-
+-	kfree(sk);
+-}
+-
+-int __xddp_resize_streambuf(struct xddp_socket *sk){ /* sk->lock held */
+-	if (sk->buffer)
+-		xnheap_free(sk->bufpool, sk->buffer);
+-
+-	if (sk->reqbufsz == 0) {
+-		sk->buffer = NULL;
+-		sk->curbufsz = 0;
+-		return 0;
+-	}
+-
+-	sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);
+-	if (sk->buffer == NULL) {
+-		sk->curbufsz = 0;
+-		return -ENOMEM;
+-	}
+-
+-	sk->curbufsz = sk->reqbufsz;
+-
+-	return 0;
+-}
+-
+-int __xddp_setsockopt(struct xddp_socket *sk,
+-			     struct rtdm_fd *fd,
+-			     void *arg)
+-{
+-	int (*monitor)(struct rtdm_fd *fd, int event, long arg);
+-	struct _rtdm_setsockopt_args sopt;
+-	struct rtipc_port_label plabel;
+-	struct __kernel_old_timeval tv;
+-	rtdm_lockctx_t s;
+-	size_t len;
+-	int ret;
+-
+-	ret = rtipc_get_sockoptin(fd, &sopt, arg);
+-	if (ret)
+-		return ret;
+-
+-	if (sopt.level == SOL_SOCKET) {
+-		switch (sopt.optname) {
+-
+-		case SO_RCVTIMEO_OLD:
+-			ret = rtipc_get_timeval(fd, &tv, sopt.optval, sopt.optlen);
+-			if (ret)
+-				return ret;
+-			sk->timeout = rtipc_timeval_to_ns(&tv);
+-			break;
+-
+-		default:
+-			ret = -EINVAL;
+-		}
+-
+-		return ret;
+-	}
+-
+-	if (sopt.level != SOL_XDDP)
+-		return -ENOPROTOOPT;
+-
+-	switch (sopt.optname) {
+-
+-	case XDDP_BUFSZ:
+-		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
+-		if (ret)
+-			return ret;
+-		if (len > 0) {
+-			len += sizeof(struct xddp_message);
+-			if (sk->bufpool &&
+-			    len > xnheap_get_size(sk->bufpool)) {
+-				return -EINVAL;
+-			}
+-		}
+-		rtdm_lock_get_irqsave(&sk->lock, s);
+-		sk->reqbufsz = len;
+-		if (len != sk->curbufsz &&
+-		    !test_bit(_XDDP_SYNCWAIT, &sk->status) &&
+-		    test_bit(_XDDP_BOUND, &sk->status))
+-			ret = __xddp_resize_streambuf(sk);
+-		rtdm_lock_put_irqrestore(&sk->lock, s);
+-		break;
+-
+-	case XDDP_POOLSZ:
+-		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
+-		if (ret)
+-			return ret;
+-		if (len == 0)
+-			return -EINVAL;
+-		cobalt_atomic_enter(s);
+-		if (test_bit(_XDDP_BOUND, &sk->status) ||
+-		    test_bit(_XDDP_BINDING, &sk->status))
+-			ret = -EALREADY;
+-		else
+-			sk->poolsz = len;
+-		cobalt_atomic_leave(s);
+-		break;
+-
+-	case XDDP_MONITOR:
+-		/* Monitoring is available from kernel-space only. */
+-		if (rtdm_fd_is_user(fd))
+-			return -EPERM;
+-		if (sopt.optlen != sizeof(monitor))
+-			return -EINVAL;
+-		if (rtipc_get_arg(NULL, &monitor, sopt.optval, sizeof(monitor)))
+-			return -EFAULT;
+-		sk->monitor = monitor;
+-		break;
+-
+-	case XDDP_LABEL:
+-		if (sopt.optlen < sizeof(plabel))
+-			return -EINVAL;
+-		if (rtipc_get_arg(fd, &plabel, sopt.optval, sizeof(plabel)))
+-			return -EFAULT;
+-		cobalt_atomic_enter(s);
+-		if (test_bit(_XDDP_BOUND, &sk->status) ||
+-		    test_bit(_XDDP_BINDING, &sk->status))
+-			ret = -EALREADY;
+-		else {
+-			strcpy(sk->label, plabel.label);
+-			sk->label[XNOBJECT_NAME_LEN-1] = 0;
+-		}
+-		cobalt_atomic_leave(s);
+-		break;
+-
+-	default:
+-		ret = -EINVAL;
+-	}
+-
+-	return ret;
+-}
+-
+-int __xddp_getsockopt(struct xddp_socket *sk,
+-			     struct rtdm_fd *fd,
+-			     void *arg)
+-{
+-	struct _rtdm_getsockopt_args sopt;
+-	struct rtipc_port_label plabel;
+-	struct __kernel_old_timeval tv;
+-	rtdm_lockctx_t s;
+-	socklen_t len;
+-	int ret;
+-
+-	ret = rtipc_get_sockoptout(fd, &sopt, arg);
+-	if (ret)
+-		return ret;
+-
+-	if (rtipc_get_arg(fd, &len, sopt.optlen, sizeof(len)))
+-		return -EFAULT;
+-
+-	if (sopt.level == SOL_SOCKET) {
+-		switch (sopt.optname) {
+-
+-		case SO_RCVTIMEO_OLD:
+-			rtipc_ns_to_timeval(&tv, sk->timeout);
+-			ret = rtipc_put_timeval(fd, sopt.optval, &tv, len);
+-			if (ret)
+-				return ret;
+-			break;
+-
+-		default:
+-			ret = -EINVAL;
+-		}
+-
+-		return ret;
+-	}
+-
+-	if (sopt.level != SOL_XDDP)
+-		return -ENOPROTOOPT;
+-
+-	switch (sopt.optname) {
+-
+-	case XDDP_LABEL:
+-		if (len < sizeof(plabel))
+-			return -EINVAL;
+-		cobalt_atomic_enter(s);
+-		strcpy(plabel.label, sk->label);
+-		cobalt_atomic_leave(s);
+-		if (rtipc_put_arg(fd, sopt.optval, &plabel, sizeof(plabel)))
+-			return -EFAULT;
+-		break;
+-
+-	default:
+-		ret = -EINVAL;
+-	}
+-
+-	return ret;
+-}
+-
+diff --git a/kernel/cobalt/sched.c b/kernel/cobalt/sched.c
+index 62b49740c..1feb6bbc9 100644
+--- a/kernel/cobalt/sched.c
++++ b/kernel/cobalt/sched.c
+@@ -367,21 +367,26 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
+         
+             if (my_msg_battery.message_integrity == true){
+    	      printk(XENO_INFO
+-                "chargenow :%d\ncapacity:%d\n",my_msg_battery.chargenow,my_msg_battery.capacity
+-	      
+-              /*TODO Compute :
+-		
+-		total_proc_demand 
+-		total_WCET_unfinish
+-		energy_demand				
+-      		energy_produced //In [ti,deadline]		
+-
+-		slack_time
+-		slack_energy
+-		total_energy
+-	      */	
++                "chargenow :%d\ncapacity:%d\n",my_msg_battery.chargenow,my_msg_battery.capacity);
++
++	      list_for_each_entry(b_thread, q, rlink) {
++                if (unlikely(b_thread->sched_class == &xnsched_class_dyna)){
++                 
++                  /*TODO Compute for each thread:
+ 		
+-              );      
++		  1) slack_time
++		  2) slack_energy
++	          
++                  using : */
++		  param.rt.WCET;
++                  param.rt.WCEC;
++
++                  my_msg_battery.chargenow;
++		  my_msg_battery.battery_size;
++		  my_msg_battery.energy_production;
++		}	  
++              }	      
++     
+   	    }
+           }
+   
+-- 
+2.17.1
+
