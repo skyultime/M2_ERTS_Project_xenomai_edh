@@ -1,0 +1,51 @@
+1. on some ioctl() request from the application (TBD), the driver
+creates the kernel endpoint of a message pipe by a call to
+xnpipe_connect(-1, &mpipe_ops, arg). This call returns a pipe "minor"
+number, which is the identifier of the new channel. This minor value is
+passed back to the application as a result of the ioctl() request.
+
+      Regarding xnpipe_connect() --
+
+      -1 means "find and pick the next free minor for me" to the core.
+     
+      mpipe_ops is an operation descriptor which can be zeroed for the
+      most part, asking the core for default values, except
+      .free_obuf. This particular handler will be called by the core for
+      releasing every outgoing buffer, i.e. every buffer the driver will
+      send via xnpipe_send(), which the application should read(2) (See
+      below). Typically, if the data buffer you passed to xnpipe_send()
+      was obtained from xnmalloc(), then your .free_obuf handler would
+      dispose of it by calling xnfree().
+
+      'arg' is an opaque handle you can use to pass your own "extended
+      context" information, which handlers in mpipe_ops will receive as
+      the 'xstate' argument.
+
+      There is an example of such use in drivers/ipc/xddp.c, although it
+      is more complex.
+
+2. the application creates its endpoint for the same channel by a call
+to open("/dev/rtp$minor", ...), obtaining a regular file descriptor
+'pfd'.
+
+/*********************************************************************/
+
+   /*TODO Add observer to update total_energy for example as below :
+  
+   if (thread == &sched->rootcb){ //IDLE
+     total_energy += energy_produced;
+   }else{ //NOT IDLE
+
+	total_energy -= energy_consumption;
+	total_energy += energy_produced;
+
+   }          
+
+   if (total_energy > my_msg_battery.capacity )
+     total_energy = my_msg_battery.capacity;
+
+   if (total_energy < 0 )
+     total_energy = 0;
+   */
+
+/*********************************************************************/
