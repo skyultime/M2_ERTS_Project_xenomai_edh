@@ -407,7 +407,7 @@
 		\vspace{0.75\baselineskip} % Whitespace above the title
 % ========== Title ===============	
 	{	\Huge M2 CORO-ERTS project 2021-2022 :
-	 EDF validation \&  \linebreak EDH implementation over Xenomai\\	}
+	 EDF validation \&  \linebreak ED-H implementation over Xenomai\\	}
 	 
 % ======================================
 		\vspace{0.75\baselineskip} % Whitespace below the title
@@ -452,20 +452,59 @@ This document is intended for educational use within ECN. Consequently, its cont
 \section{Project organization}
 \vspace{4cm}
     
-%TODO
+
 
 %===============================
 
-	\subsection{TODO}
-
+	\subsection{Introduction}
     \newline
+    To work efficiently in this project, we have decide to divide the projects in sprints. Each sprints has an average 2 weeks length. For each sprint, specific task and milestones are pre-defined in order to break the project schedule into smaller block of time in which smaller objectives must be achieved.
+    
+    On october the 15th, we meet Ms.Queudet, the advisor of this project. She gave the interest of the project : Put into applications a dynamic-priority energy aware scheduling policy, I mean ED-H, through the use of a RT (Real-time) kernel.
+    
+    To perform this, we will have a dual kernel configurations : a Linux non RT kernel and a Xenomai RT kernel (Cobalt).
+    
+    On top of that, a master student had previously integrated EDF policy into Xenomai but no tests have been executed.
+    
+    So to sum up, the aim will be to assert EDF integration over Xenomai then integrate ED-H policy without affecting integrity of other scheduling policies (round-robin and EDF). 
+    
+    \subsection{Objectives}
+    
+    Below is a list of the primary objectives for the project :
+    \begin{enumerate}
+        \item Installation of modified Xenomai and validation for EDF integration
+
+        Metric : \begin{itemize}
+            \item Report for modifications added to have a functional installation
+            \item Tests to validate EDF source code over Xenomai
+        \end{itemize}
+        
+        \item Development of  a Linux module to grab battery information and send them to Cobalt kernel
+
+        Metric : \begin{itemize}
+            \item Guideline for the creation/use of the Linux module
+            \item Source code for the Linux battery module​
+        \end{itemize}
+
+        \item ED-H implementation over Xenomai and validation 
+
+        Metric : \begin{itemize}
+            \item Source code for ED-H implementation over Xenomai 
+            \item Source code for a fake linux battery module
+        \end{itemize}
+        
+        \item Redaction of the final report, PWP presentation, handle git repositories 
+
+    \end{enumerate}
+    
+    
 	\vspace{-1.5mm}
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Validation for EDF policy}
 \vspace{4cm}
 
-In this section, we will descibe the entire process to validate the EDF policy developped over Xenomai (refer to the \href{https://github.com/skyultime/Xenomai-EDH/commit/37aed321405df633a39f17e16ad50599cadb9ed9}{github repository} for EDF policy source code
+In this section, we will descibe the entire process to validate the EDF policy developped over Xenomai (refer to the \href{https://github.com/skyultime/Xenomai-EDH/commit/37aed321405df633a39f17e16ad50599cadb9ed9}{github repository} for EDF policy source code 
 
     \subsection{Cobalt core installation with dynamic priority policy}
     
@@ -476,7 +515,7 @@ In this section, we will descibe the entire process to validate the EDF policy d
     \begin{itemize}
        \item Replace the github link: \href{https://github.com/BraveMole/Xenomai-EDF.git}{https://github.com/BraveMole/Xenomai-EDF.git} with this one : \href{https://github.com/skyultime/Xenomai-EDH.git}{https://github.com/skyultime/Xenomai-EDH.git} Be sure to move on branch EDFpolicyV1.0 with the following command : \textbf{git checkout EDFpolicyV1.0}
        
-       \item To configure the Kernel (cmd \textbf{make menu-config}), load directly the .config file available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/SourceCode/Patch/linuxConfigFiles}{here} (the ipipe patch is also available in the same location if needed)
+       \item To configure the Kernel (cmd \textbf{make menu-config}), load directly the .config file available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/dev/SourceCode/Patch/LinuxConfigFiles}{here} (the ipipe patch is also available in the same location if needed)
        
     \end{itemize}
     
@@ -484,15 +523,15 @@ In this section, we will descibe the entire process to validate the EDF policy d
      \begin{itemize}
        \item Replace the github link : \href{https://github.com/BraveMole/Xenomai-EDF.git}{https://github.com/BraveMole/Xenomai-EDF.git} with this one : \href{https://github.com/skyultime/Xenomai-EDH.git}{https://github.com/skyultime/Xenomai-EDH.git}. Be sure to move on branch final\_version with the following command : \textbf{git checkout final\_version}
        
-       \item To configure the Kernel (cmd \textbf{make menu-config}), load directly the .config file available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/SourceCode/Patch/linuxConfigFiles}{here} (the ipipe patch is also available in the same location if needed)
+       \item To configure the Kernel (cmd \textbf{make menu-config}), load directly the .config file available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/dev/SourceCode/Patch/LinuxConfigFiles}{here} (the ipipe patch is also available in the same location if needed)
        
     \end{itemize}
     
-    In case you want to start from scratch and integrate EDF or EDH policy in default Xenomai 3.1 git repository, you can use the default repository : \href{https://github.com/openil/xenomai-3.git}{https://github.com/openil/xenomai-3.git} and add patch available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/SourceCode/Patch}{here} (1 patch for EDF and 1 additional patch for EDH)
+    In case you want to start from scratch and integrate\cite{EDF}DF or EDH policy in default Xenomai 3.1 git repository, you can use the default repository : \href{https://github.com/openil/Xenomai-3.git}{https://github.com/openil/Xenomai-3.git} and add patch available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/dev/SourceCode/Patch}{here} (1 patch for EDF and 1 additional patch for EDH)
 
     \subsection{EDF Source code modification}
         
-        In order to view details of implementation for EDF policy integration over Xenomai 3.1, you can have a look to the EDF.patch file available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/blob/dev/SourceCode/Patch/EDF.patch}{here}
+        In order to view details of implementation for EDF policy integration over Xenomai 3.1, you can have a look to the EDF.patch file available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/blob/dev/SourceCode/Patch/EDF.patch}{here}
 
         Here is the list of modified files:
         
@@ -521,7 +560,7 @@ In this section, we will descibe the entire process to validate the EDF policy d
             \item lib/copperplate/threadobj.c
         \end{itemize}
 
-    On top of that, the purpose of the last commit related to EDF policy implementation (see \href{https://github.com/skyultime/Xenomai-EDH/commit/37aed321405df633a39f17e16ad50599cadb9ed9}{here}) is only to have a proper compilation of xenomai source code files without warning/errors.\newline
+    On top of that, the purpose of the last commit related to EDF policy implementation (see \href{https://github.com/skyultime/Xenomai-EDH/commit/37aed321405df633a39f17e16ad50599cadb9ed9}{here}) is only to have a proper compilation of Xenomai source code files without warning/errors.\newline
 
     Basically, the implementation of the EDF policy over Xenomai relies on :
     \begin{itemize}
@@ -571,11 +610,11 @@ In this section, we will descibe the entire process to validate the EDF policy d
 
 
     \newpage
-    \subsection{EDF Source code Validation}
+    \subsection{EDF Source code Validation} \label{validation}
     
     Now, let's have a look to the validation process to ensure the EDF policy is working well over Xenomai through simple examples.
     
-    The source code dedicated to create/start a pre-defined number of real-time tasks scheduled with EDF policy is available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/main/Tests/EDFonXenomai/edfAsserts}{here}.
+    The source code dedicated to create/start a pre-defined number of real-time tasks scheduled with EDF policy is available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/main/Tests/EDFonXenomai/edfAsserts}{here}.
     
     A first important thing to do in order to compilate source code using Xenomai Alchemy API is to define the CFLAGS,LDFLAGS and CC Flags as shown below :
     
@@ -595,7 +634,7 @@ In this section, we will descibe the entire process to validate the EDF policy d
     
     The execution process is really simple:
     \begin{enumerate}
-        \item follow the README.md to execute the ./EDFtest binary (link \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/main/Tests/EDFonXenomai/edfAsserts}{here})
+        \item follow the README.md to execute the ./EDFtest binary (link \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/main/Tests/EDFonXenomai/edfAsserts}{here})
         \item Choose to use dynamic priority,enter the number of tasks and desired parameters for each task in the terminal
         \item Oberve the results (also display in the terminal).
     
@@ -617,20 +656,44 @@ In this section, we will descibe the entire process to validate the EDF policy d
         \label{tab1}
         \end{table}
 
-        First we could use these values and observe the behaviour with EDF policy and Round-robin policy. Below are the parameters we entered when executing the binary EDFtest (keep in mind the conversion rate => 70 000 000 units = 70 ms):
+        First we could use these values and observe the behaviour with EDF policy and Round-robin policy. Below are the parameters we entered when executing the binary EDF test (keep in mind the conversion rate => 70 000 000 units = 70 ms):
         
-        TODO : Ajouter screenshots des paramètres utilisés avec/sans politique EDF
+         \begin{figure}[ht]
+            \centering
+            \begin{minipage}{0.4\textwidth}
+                \centering
+                \includegraphics[width=1.25\textwidth]{paramFixed.png} % first figure itself
+                \caption{Param. for fixed policy}
+            \end{minipage}\hfill
+            \begin{minipage}{0.4\textwidth}
+                \centering
+                \includegraphics[width=1.3\textwidth]{paramDynamic.png} % second figure itself
+                \caption{Param. for EDF policy}
+            \end{minipage}
+        \end{figure} \newline
         
-        Then we can compare the 2 execution. The figure 8 exhibits the 3 tasks scheduled with round-robin policy. There is no preemption occuring and the priority of execution is directly linked to the priority of each tasks as describes in table 1.\newline
+        Then we can compare the 2 execution. The figure 8 exhibits the 3 tasks scheduled with round-robin policy(which could be here seen as a Rate Monotonic policy here because we assign a different priority to each RT task). There is no preemption occuring and the priority of execution is directly linked to the priority of each tasks as describes in table 1.\newline
         The figure 9 exhibits the 3 tasks scheduled with EDF policy. We can indeed clearly see the differences with figures 8. We can observe preemptions and tasks being scheduled according to their deadlines.
         
-        TODO : Ajouter screenshots de l'exécution des tâches avec politique round-robin / avec politique EDF
+        \begin{figure}[ht]
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \hspace{-2.5cm}
+                \includegraphics[width=1.4\textwidth]{FixedWithoutPreemption.png} % first figure itself
+                \caption{Fixed policy without preemption}
+            \end{minipage}\hfill
+            \begin{minipage}{0.45\textwidth}
+                \hspace{-1cm}
+                \includegraphics[width=1.43\textwidth]{DynaWithPreemption.png} % second figure itself
+                \caption{EDF policy with preemption}
+            \end{minipage}
+        \end{figure} \newline
+
         
         In order to clearly observe preemptions (and so be sure to have a proper EDF scheduling activity), we can directly compare our results with a tool, called Cheddar. Cheddar allows you to model software architectures of real-time systems in order to check their schedulability (available \href{http://beru.univ-brest.fr/cheddar/#RefDownloadRelease}{here}). 
         
-        Let's simulate with Cheddar using parameters define in table 1 (examples and configuration files for Cheddar are available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/main/Tests/EDFonXenomai/EDF_Problem}{here} if needed) and let's compare with what we obtained using EDF policy over Xenomai:
+        Let's simulate with Cheddar using parameters define in table 1 (examples and configuration files for Cheddar are available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/main/Tests/EDFonXenomai/EDF_Problem}{here} if needed) and let's compare with what we obtained using EDF policy over Xenomai:
 
-        \newpage
         \begin{itemize}
             \item In this first view, the task T2 is executing. On both view (Cheddar on the left, Xenomai on the right) at T= 840 ms , T1 which has a shortest deadline than T2 is preempted it.
             
@@ -930,7 +993,7 @@ If there is no task ready in the run-queue the scheduler goes to idle state and 
 \end{algorithm}
 
 \newline
-\subparagraph{CHECK$\_$ENERGY}\hfill
+\subparagraph{CHECK$\_$ENERGY}\hfill \label{SlackMethodEnergy}
 \newline
 
 After the task has been selected from the run-queue, the scheduler enters the CHECK$\_$ENERGY state. Here, the energy units \textit{E} in the battery are checked to see if they are sufficient to execute the task which is currently ready. If the energy in battery is completely depleted \textit{(E==0)}, the processor cannot execute tasks – so we need to introduce an idle period during which the battery can recharge, known as the  recharge cycle. \\
@@ -1007,7 +1070,7 @@ If the available energy is sufficient for executing the job, case EXECUTE JOB co
 \caption{CHECK\_ENERGY State}
 \end{algorithm}
 
-\subparagraph{CHECK$\_$SLACK$\_$TIME}\hfill
+\subparagraph{CHECK$\_$SLACK$\_$TIME}\hfill \label{SlackMethodTime}
 \newline
 
 To recall from the previous section, the processor enters the CHECK$\_$SLACK$\_$TIME state from CHECK$\_$ENERGY state When the energy in the battery is completely depleted. It continually loops within this state until battery energy reach Emax or the scheduler cannot be idled further for recharging due to the minimum ST equating to 0.\\
@@ -1198,7 +1261,7 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
 	
 	Few solutions exist :\begin{itemize}
 	    \item XDDP communication : a native solution using communication pipe, fully supported since Xenomai 2.0
-	    \item RT CAN bus or RT USART or RTnet (TCP/IP socket interface) : useful when your Cobalt is on a different board than your linux Kernel
+	    \item RT CAN bus or RT USART or RTnet (TCP/IP socket interface) : useful when your Cobalt is on a different board than your Linux Kernel
 	    \item shared memory
 	\end{itemize}
 	
@@ -1206,7 +1269,7 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
 	
 	\subsection{XDDP communication : How it works}
 	
-    As explained before, Xenomai runs alongside the default linux kernel. (using an Hardware abstraction layer called \textbf{adeos}). In our configuration (I mean a dual Kernel configuration), Xenomai has the higher priority and Linux the lowest. That mean each Xenomai task which use no Linux system calls or APIs within the code have a higher priority (they are in \textbf{primary mode} than other tasks using it (these tasks are in \textbf{secondary mode}).
+    As explained before, Xenomai runs alongside the default Linux kernel. (using an Hardware abstraction layer called \textbf{adeos}). In our configuration (I mean a dual Kernel configuration), Xenomai has the higher priority and Linux the lowest. That mean each Xenomai task which use no Linux system calls or APIs within the code have a higher priority (they are in \textbf{primary mode} than other tasks using it (these tasks are in \textbf{secondary mode}).
     
     On top of that, switching from primary mode to secondary mode could lead to priority inversion problem (a higher priority task being preempted by a task with a lower priority).
     
@@ -1218,7 +1281,7 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
 	\caption{SW Architecture for RT-nRT  communication}
 	\end{figure} \newline
     
-    Basically, the XDDP mechanism use message pipes to communicate between real-time tasks and regular Linux tasks. A communication pipe could only be open by a Xenomai RT tasks.Then a non-RT task could write/read data shared on the pipe by accessing it from the linux standard filesystem (I will explain this later).
+    Basically, the XDDP mechanism use message pipes to communicate between real-time tasks and regular Linux tasks. A communication pipe could only be open by a Xenomai RT tasks.Then a non-RT task could write/read data shared on the pipe by accessing it from the Linux standard filesystem (I will explain this later).
     
     The figure below illustrates the RT - non RT communication process using XDDP :
     \begin{figure}[ht]
@@ -1226,15 +1289,15 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
 	\caption{Simplified diagram for XDDP communication}
 	\end{figure} \newline
 	
-	On the Linux domain side, pseudo-device files named /dev/rtp<minor> give regular POSIX tasks access to non real-time communication endpoints, via the linux standard File System service. 
+	On the Linux domain side, pseudo-device files named /dev/rtp<minor> give regular POSIX tasks access to non real-time communication endpoints, via the Linux standard File System service. 
 	\newline On the Xenomai domain side, a socket is bound to an XDDP port, which will then act as a proxy to send and receive data to/from the associated pseudo-device file. Keep in mind that XDDP port and minor number are the same and so :
  
  \begin{itemize}
-     \item data sending through a XDDP socket using sendto() function could be received in the linux domain via the standard read() function
-     \item data receiving through a XDDP socket using recvfrom() function have been sent from the linux domain via the standard write() function
+     \item data sending through a XDDP socket using sendto() function could be received in the Linux domain via the standard read() function
+     \item data receiving through a XDDP socket using recvfrom() function have been sent from the Linux domain via the standard write() function
  \end{itemize}
  
- Figure below illustrates functions call in linux domain and Xenomai domain :
+ Figure below illustrates functions call in Linux domain and Xenomai domain :
  
      \begin{figure}[ht]
     \hspace{-2cm}
@@ -1242,15 +1305,15 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
 	\caption{Functions call in both domains}
 	\end{figure} \newline
  
- We made a simple example to show you how to bind a socket and read data from RT tasks \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/SourceCode/xttpProtTemplate}{here}:  
+ We made a simple example to show you how to bind a socket and read data from RT tasks \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/dev/SourceCode/xttpProtTemplate}{here}:  
  
- Another similar example, available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/SourceCode/XenomaiSideXddpExample}{here}, use functions with the RT\_PIPE\_ prefix. This is simply an API to simplify the whole process (indeed RT\_PIPE\_CREATE call directly the socket() function for example).\newline
+ Another similar example, available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/dev/SourceCode/XenomaiSideXddpExample}{here}, use functions with the RT\_PIPE\_ prefix. This is simply an API to simplify the whole process (indeed RT\_PIPE\_CREATE call directly the socket() function for example).\newline
  
- Xenomai also provides example which are available \href{https://xenomai.org/documentation/xenomai-3/html/xeno3prm/xddp-echo_8c-example.html}{here} as well...
+ Xenomai also provides example which are available \href{https://Xenomai.org/documentation/Xenomai-3/html/xeno3prm/xddp-echo_8c-example.html}{here} as well...
 
 	\subsection{XDDP communication to retrieve battery data}
     	
-	As explained before, we need first a RT task dedicated to create socket and then retrieve information from the battery. Then we need a non-RT task dedicated to send battery information from the linux domain. While the RT task can be directly the one use to schedule all Xenomai tasks (I mean we can retrieve battery information just before selecting the next thread to be executed), we need to create a linux module dedicated to get battery information.
+	As explained before, we need first a RT task dedicated to create socket and then retrieve information from the battery. Then we need a non-RT task dedicated to send battery information from the Linux domain. While the RT task can be directly the one use to schedule all Xenomai tasks (I mean we can retrieve battery information just before selecting the next thread to be executed), we need to create a Linux module dedicated to get battery information.
 	
 	Rather than using a simple application in user space which we can launch each time we need to use, the interest of using a module is :
 	\begin{enumerate}
@@ -1259,16 +1322,16 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
 	    \item Direct call of kernel space functions
 	\end{enumerate}
 	
-	The linux battery module is available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/SourceCode/linuxBattModule}{here} (with README file as well).\newline
+	The Linux battery module is available \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/dev/SourceCode/LinuxBattModule}{here} (with README file as well).\newline
 	
 	In this module, we can observe 3 main parts :
 	\begin{itemize}
-	    \item The init section : Basically, we use the equivalent read() function to access a socket on port 0 (=minor 0) . We also create a timer, of \textbf{TIMER\_LENGTH} ms duration. Each time the timer expires, a work task dedicated to send battery information through the XDDP port 0 will be called through the timer handler. (cf. \href{https://linux-kernel-labs.github.io/refs/heads/master/labs/deferred_work.html}{here} to understand the basis of workqueue and deferred work).
+	    \item The init section : Basically, we use the equivalent read() function to access a socket on port 0 (=minor 0) . We also create a timer, of \textbf{TIMER\_LENGTH} ms duration. Each time the timer expires, a work task dedicated to send battery information through the XDDP port 0 will be called through the timer handler. (cf. \href{https://Linux-kernel-labs.github.io/refs/heads/master/labs/deferred_work.html}{here} to understand the basis of workqueue and deferred work).
 	    
          \begin{figure}[ht]
          \centering
     	\includegraphics[scale=0.6]{init.png}
-    	\caption{Init section for battery linux module}
+    	\caption{Init section for battery Linux module}
     	\end{figure} \newline
 	    
 	    \item the timer handler : Each time the timer expires, he will call the work task.
@@ -1276,15 +1339,15 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
          \begin{figure}[ht]
          \centering
     	\includegraphics[scale=0.6]{timHandler.png}
-    	\caption{Tim handler for battery linux module}
+    	\caption{Time handler for battery Linux module}
     	\end{figure}
 	    
-	    \newpage \item the work task : Gather battery information via \textbf {\href{https://www.kernel.org/doc/html/latest/power/power_supply_class.html}{<linux/power\_supply>}} and send it via standard write() function. Once all operations are operated, the work task relaunch the timer.\newline
+	    \newpage \item the work task : Gather battery information via \textbf {\href{https://www.kernel.org/doc/html/latest/power/power_supply_class.html}{<Linux/power\_supply>}} and send it via standard write() function. Once all operations are operated, the work task relaunch the timer.\newline
 	  
 	    \begin{figure}[!h]
          \centering
     	\includegraphics[scale=0.6]{work_task.png}
-    	\caption{Work task handler for battery linux module}
+    	\caption{Work task handler for battery Linux module}
     	\end{figure} \newline
 	  
   	\end{itemize}
@@ -1292,7 +1355,7 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
          
 	    
 	
-	We also provide a fake battery module, initially retrieved from this repository : https://github.com/hoelzro/linux-fake-battery-module \newline and whose purpose is to simulate the dynamic behaviour of a battery (Adaptation and more details \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/SourceCode/fakeBatteryModule}{here})
+	We also provide a fake battery module, initially retrieved from this repository : https://github.com/hoelzro/Linux-fake-battery-module \newline and whose purpose is to simulate the dynamic behaviour of a battery (Adaptation and more details \href{https://github.com/skyultime/M2_ERTS_Project_Xenomai_edh/tree/dev/SourceCode/fakeBatteryModule}{here})
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1307,10 +1370,45 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
         \item Modify alchemy API to match ED-H needs.
         
     \end{enumerate}
-	\subsection{XDDP interdomain communication to gather battery data}
-	  TODO : (Code en cours de validation)\newline
-	 
-	\newpage \subsection{Scheduler alg.}
+	\subsection{XDDP interdomain communication to gather battery data} \label{xddp}
+	  \textbf{Please Keep in mind that this part is in devevlopment and  may evolve in the future.}
+        
+        As seen in the previous section, we have a linux module which can be load at boot. This module send battery informations to a RT tasks through the port 0.
+        
+        However in order for the module to access the port 0, we need to create a RT tasks in order to create a socket on minor 0.This RT tasks must be created without disturbing ED-H scheduling. To do this a first simple idea could be to add an additional task dedicated to open socket and receive battery information directly in user space. This idea isn't optimal. \newline Indeed to have a better integration of this RT tasks in xenomai source code, a second idea could be to add this RT task after Xenomai initialization ended.\newline
+        
+        To do this, we have created a couple file \textbf{batt.c/.h} directly in Cobalt directory and available \href{https://github.com/skyultime/Xenomai-EDH/blob/final_version/kernel/cobalt/batt.c}{here}
+        Here is some useful information to understand the interest of theses files :
+        \begin{itemize}
+            \item To use \textbf{socket(), bind(), write(),read()...} functions, you need to add \textbf{rtdm} or \textbf{rtdm\_dev} prefix according to Xenomai Posix API.
+            \item \textbf{batt\_init()} is the entry point. Calling this function will create a RT task dedicated to create a socket and then bind the socket to the port 0.
+            \item \textbf{rtdm\_task\_init()} is used to ease the creation of a RT tasks
+        \end{itemize}
+        
+        The 2 figures below provide source code for \textbf{batt\_init()} function and his handler function (called 
+        \textbf{rt\_batt\_loop()})
+        
+	    \newpage \begin{figure}[ht]
+        \centering
+    	\includegraphics[scale=0.9]{battInit.png}
+    	\caption{batt\_init function in batt.c}
+    	\end{figure} \newline
+    	
+	    \begin{figure}[!h]
+        \centering
+    	\includegraphics[scale=0.60]{battLoop.png}
+    	\caption{RT tasks handler in batt.c }
+    	\end{figure} \newline
+
+        \newpage Problem to resolve : rtdm\_dev\_socket failed when calling the batt\_init() function from function \textbf{xenomai\_init} (see \href{https://github.com/skyultime/Xenomai-EDH/blob/final_version/kernel/cobalt/init.c}{here} for more details and figure below)
+        
+	    \begin{figure}[!h]
+        \centering
+    	\includegraphics[scale=1]{initCall.png}
+    	\caption{Call to batt\_init in xenomai\_init()}
+    	\end{figure} \newline
+    	 
+	\newpage \subsection{Scheduler alg.} \label{slack_param}
 	Let's now talk about how to modify the scheduler algorithm in order to follow ED-H constraints.
 	
 	When we use EDF policy or a round-robin policy, the function \textbf{xnsched\_pick\_next()} available \href{https://github.com/skyultime/Xenomai-EDH/blob/final_version/kernel/cobalt/sched.c}{here} is responsible to select the next task to be executed (depending on priority or deadlines). If we have at least one task ready to be executed, this task will  be executed and the CPU will always be loaded. In case we use the ED-H policy, sometimes we want the system to stay IDLE (we need to keep selecting the IDLE task for a given time) in order for the battery to be filled again.\newline
@@ -1327,6 +1425,8 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
     	\end{figure} \newline
 	    
 	    \newpage \item We retrieve battery data (from XDDP port 0) and we compute then slack\_energy and slack\_time for each ED-H tasks.
+	    
+	    As you can see on the figure below, slack\_energy and slack\_time are not yet computed.
 	    
 	    \begin{figure}[!h]
         \centering
@@ -1382,30 +1482,78 @@ In this state, along with the variables \textit{ongoing} and \textit{$t_{Exci}$}
 	Without entering into details of implementation, don't hesitate to look at this commit for example : \href{https://github.com/skyultime/Xenomai-EDH/commit/f339c141faf314a96725899d3941c65e162457d1}{commit link}
 	Looking at this commit, you can see which files are needed to be modified in order to adapt Xenomai source code and more particularly the alchemy API.  
 	
-	\newpage \subsection{Remaining tasks and amelioration/criticism}
-	TODO: Evoquer:
+	\newpage \subsection{Remaining tasks and ameliorations} \label{remaining}
+	Here we will first list all the remaining tasks to achieve in order to have a working EDH policy over Xenomai
 	\begin{itemize}
 	    
-	    \item Section de code à compléter pour calculer les 2 paramètres suivants : \textbf{Slack\_time} et \textbf{Slack\_energy} (corps de fonctions prêt, prêt à coder...)
-	    \item Utilisation de Cheddar pour validation EDF
-	    \item Utilisation du \textbf{fake battery module} pour simplifier les tests
+	    \item Compute slack\_time and slack\_energy for each task in section \ref{slack_param}. To do this, you can have a look in section \ref{SlackMethodEnergy} and section \ref{SlackMethodTime} to know how to compute these values.
+ 	    
+ 	    \item Solve problem to create a socket on port 0 to gather battery information from RT context (in primary domain). (cf  section \ref{xddp})
+ 	    
+	    \item Test ED-H source code implementation over Xenomai
 	    
 	\end{itemize}
+	
+	To test ED-H source code, you can use the cheddar simulator to compare your results. You can also use the fake linux battery module to simulate dynamic behaviour of any kind of battery. Finally, you can have a look \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/Tests/EDHonXenomai/edhAsserts}{here} in order to ease the creation of tasks to be scheduled using ED-H policy (Still need few minor adaptations to be used).
 	
 	\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Planning \& project evolution}
 \vspace{4cm}
-	\subsection{TODO}
+	\subsection{Planning}
+	
+	In this section we will compare the provisional planning (initialy created on October, the 13th) with the effective planning.
+	
+     \begin{figure}[!h]
+        \hspace{-2cm}
+        \includegraphics[width=20cm,height=6cm]{provisionalPlanning.png}
+        \caption{Provisional planning}
+    \end{figure} \newline
+    
+     \begin{figure}[!h]
+        \hspace{-2.5cm}
+        \includegraphics[width=20cm,height=8cm]{PFE - Plannings.png}
+        \caption{Effective planning}
+    \end{figure} \newline
+	
+	\newpage
+	
+	As we can see, we didn't take into account the validation of EDF source code over Xenomai in the provisional planning. Indeed the source code files for EDF implementation over Xenomai have had to be reviewed to solve compilation errors/warnings during the linux kernel compilation. On top of that, we have had to assert EDF is working correctly over Xenomai (cf section \ref{validation}). All these have contribute to postponed by 2 weeks the ED-H implementation (really begin at \textbf{Sprint 3} in figure 24 instead of \textbf{Sprint 2} in figure 23)
+	
+	\subsection{Progress}
+	
+	A short overview of our progress in this project is presented below (figure extract from the final review, available \href{https://github.com/skyultime/M2_ERTS_Project_xenomai_edh/tree/dev/Doc/PwpSlides/finalReview}{here})\newline
+	
+     \begin{figure}[!h]
+        \hspace{-1cm}
+        \includegraphics[scale=0.7]{overProgress.png}
+        \caption{Overall progress in project}
+    \end{figure} \newline \newline
+
+	On top of that, please refer to the previous section \ref{remaining} to have a global overview of remaining jobs.
+	Keep in mind the 2 remaining tasks in order to finish EDH implementation over EDH:
+	
+	\begin{itemize}
+	    \item Compute slack\_energy and slack\_time for each task (section \ref{slack_param})
+	    \item Ensure XDDP communication working (battery informations retrieve from a RT task, section \ref{xddp})
+	    
+	\end{itemize}
+	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
+
 \section{References}
 \vspace{4cm}
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\newpage
 
 \thispagestyle{empty}
 \listoffigures
 \listoftables
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
 
